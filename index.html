@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" class="h-full overflow-hidden">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>영화 시간표 통합 대시보드</title>
 
   <link rel="icon" href="/favicon.ico">
@@ -23,12 +23,20 @@
       height: 100%;
       border: none;
     }
+    /* 스크롤바 숨기기 스타일 (선택 사항 - 더 깔끔한 뷰를 위해) */
+    .scrollbar-none::-webkit-scrollbar {
+      display: none;
+    }
+    .scrollbar-none {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
   </style>
 </head>
-<body class="bg-gray-50 min-h-screen flex flex-col font-sans">
+<body class="bg-gray-50 h-[100dvh] flex flex-col font-sans overflow-hidden select-none">
 
   <!-- 상단 네비게이션 헤더 -->
-  <header class="bg-white border-b sticky top-0 z-50 shadow-sm">
+  <header class="bg-white border-b shrink-0 z-50 shadow-sm">
     <div class="px-4 py-3 flex justify-between items-center">
       <h1 class="text-lg font-bold text-gray-800 flex items-center gap-2">
         <i data-lucide="film" class="w-5 h-5 text-indigo-600"></i>
@@ -60,9 +68,9 @@
   </header>
 
   <!-- 컨텐츠 영역 -->
-  <main class="flex-1 p-3 md:p-4 flex flex-col">
-    <!-- 영화관별 뷰 컨테이너 (flex-1로 남은 높이를 가득 채웁니다) -->
-    <div class="flex-1 relative bg-white border rounded-xl shadow-sm overflow-hidden flex flex-col min-h-[500px]">
+  <main class="flex-1 p-3 md:p-4 flex flex-col overflow-hidden">
+    <!-- 영화관별 뷰 컨테이너 (flex-1 및 overflow-hidden으로 모바일 높이에 꽉 가둡니다) -->
+    <div class="flex-1 relative bg-white border rounded-xl shadow-sm overflow-hidden flex flex-col">
       
       <!-- KU 시네마 -->
       <div id="content-ku" class="tab-content w-full h-full flex-1 scroll-container">
@@ -87,7 +95,7 @@
         </div>
       </div>
 
-      <!-- 메가박스 군자 (모바일 최적화 링크 연동 + 아래쪽 가림막 해결을 위해 높이 강제 설정 및 감싸기) -->
+      <!-- 메가박스 군자 -->
       <div id="content-megabox" class="tab-content w-full h-full flex-1 scroll-container hidden">
         <div class="w-full h-full overflow-auto" style="-webkit-overflow-scrolling: touch;">
           <iframe 
@@ -98,7 +106,7 @@
         </div>
       </div>
 
-      <!-- 왕십리 CGV (모바일 최적화 링크 연동 + 아래쪽 가림막 해결을 위해 높이 강제 설정 및 감싸기) -->
+      <!-- 왕십리 CGV -->
       <div id="content-wangcgv" class="tab-content w-full h-full flex-1 scroll-container hidden">
         <div class="w-full h-full overflow-auto" style="-webkit-overflow-scrolling: touch;">
           <iframe 
@@ -109,7 +117,7 @@
         </div>
       </div>
 
-      <!-- 라이카 시네마 (모바일 최적화 링크 연동 + 아래쪽 가림막 해결을 위해 높이 강제 설정 및 감싸기) -->
+      <!-- 라이카 시네마 -->
       <div id="content-laika" class="tab-content w-full h-full flex-1 scroll-container hidden">
         <div class="w-full h-full overflow-auto" style="-webkit-overflow-scrolling: touch;">
           <iframe 
