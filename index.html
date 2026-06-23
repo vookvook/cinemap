@@ -12,7 +12,7 @@
   <!-- Lucide Icons (기본 아이콘용) -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
-    /* iOS 및 모바일 브라우저에서 iframe 스크롤 불안정 현상 해결을 위한 CSS */
+    /* iOS 및 모바일 브라우저 터치 미끄러짐 최적화 */
     .scroll-container {
       -webkit-overflow-scrolling: touch;
       overflow-y: auto;
@@ -23,7 +23,7 @@
       height: 100%;
       border: none;
     }
-    /* 스크롤바 숨기기 스타일 (선택 사항 - 더 깔끔한 뷰를 위해) */
+    /* 스크롤바 숨기기 스타일 */
     .scrollbar-none::-webkit-scrollbar {
       display: none;
     }
@@ -69,12 +69,11 @@
 
   <!-- 컨텐츠 영역 -->
   <main class="flex-1 p-3 md:p-4 flex flex-col overflow-hidden">
-    <!-- 영화관별 뷰 컨테이너 (flex-1 및 overflow-hidden으로 모바일 높이에 꽉 가둡니다) -->
+    <!-- 영화관별 뷰 컨테이너 (flex-1 및 overflow-hidden으로 모바일 높이에 맞춤) -->
     <div class="flex-1 relative bg-white border rounded-xl shadow-sm overflow-hidden flex flex-col">
       
-      <!-- KU 시네마 -->
+      <!-- KU 시네마 (반응형 대응용 외부 스크롤 방식 유지) -->
       <div id="content-ku" class="tab-content w-full h-full flex-1 scroll-container">
-        <!-- 자체 홈페이지 구조상 스케일링 필요 -->
         <div class="w-full h-full overflow-auto" style="-webkit-overflow-scrolling: touch;">
           <iframe 
             src="https://kucinema.net/timetable/" 
@@ -84,7 +83,7 @@
         </div>
       </div>
 
-      <!-- 서울아트시네마 -->
+      <!-- 서울아트시네마 (반응형 대응용 외부 스크롤 방식 유지) -->
       <div id="content-seoul" class="tab-content w-full h-full flex-1 scroll-container hidden">
         <div class="w-full h-full overflow-auto" style="-webkit-overflow-scrolling: touch;">
           <iframe 
@@ -95,37 +94,31 @@
         </div>
       </div>
 
-      <!-- 메가박스 군자 -->
-      <div id="content-megabox" class="tab-content w-full h-full flex-1 scroll-container hidden">
-        <div class="w-full h-full overflow-auto" style="-webkit-overflow-scrolling: touch;">
-          <iframe 
-            src="https://m.place.naver.com/theater/1396259461/movie" 
-            class="w-full h-[2200px]"
-            title="Megabox Gunja Timetable">
-          </iframe>
-        </div>
+      <!-- 메가박스 군자 (내부 네이티브 스크롤 방식으로 프리징 및 하단 가림막 원천 해결) -->
+      <div id="content-megabox" class="tab-content w-full h-full flex-1 relative overflow-hidden hidden">
+        <iframe 
+          src="https://m.place.naver.com/theater/1396259461/movie" 
+          class="absolute top-0 left-0 w-full h-[calc(100%+56px)]"
+          title="Megabox Gunja Timetable">
+        </iframe>
       </div>
 
-      <!-- 왕십리 CGV -->
-      <div id="content-wangcgv" class="tab-content w-full h-full flex-1 scroll-container hidden">
-        <div class="w-full h-full overflow-auto" style="-webkit-overflow-scrolling: touch;">
-          <iframe 
-            src="https://m.place.naver.com/theater/12964379/movie" 
-            class="w-full h-[2200px]"
-            title="Wangsimni CGV Timetable">
-          </iframe>
-        </div>
+      <!-- 왕십리 CGV (내부 네이티브 스크롤 방식으로 프리징 및 하단 가림막 원천 해결) -->
+      <div id="content-wangcgv" class="tab-content w-full h-full flex-1 relative overflow-hidden hidden">
+        <iframe 
+          src="https://m.place.naver.com/theater/12964379/movie" 
+          class="absolute top-0 left-0 w-full h-[calc(100%+56px)]"
+          title="Wangsimni CGV Timetable">
+        </iframe>
       </div>
 
-      <!-- 라이카 시네마 -->
-      <div id="content-laika" class="tab-content w-full h-full flex-1 scroll-container hidden">
-        <div class="w-full h-full overflow-auto" style="-webkit-overflow-scrolling: touch;">
-          <iframe 
-            src="https://m.place.naver.com/theater/1156408497/movie" 
-            class="w-full h-[2200px]"
-            title="Laika Cinema Timetable">
-          </iframe>
-        </div>
+      <!-- 라이카 시네마 (내부 네이티브 스크롤 방식으로 프리징 및 하단 가림막 원천 해결) -->
+      <div id="content-laika" class="tab-content w-full h-full flex-1 relative overflow-hidden hidden">
+        <iframe 
+          src="https://m.place.naver.com/theater/1156408497/movie" 
+          class="absolute top-0 left-0 w-full h-[calc(100%+56px)]"
+          title="Laika Cinema Timetable">
+        </iframe>
       </div>
 
     </div>
