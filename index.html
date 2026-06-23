@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>영화 시간표 통합 대시보드</title>
+
+  <link rel="icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons (기본 아이콘용) -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* iOS 및 모바일 브라우저에서 iframe 스크롤 불안정 현상 해결을 위한 CSS */
+    .scroll-container {
+      -webkit-overflow-scrolling: touch;
+      overflow-y: auto;
+      position: relative;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col font-sans">
+
+  <!-- 상단 네비게이션 헤더 -->
+  <header class="bg-white border-b sticky top-0 z-50 shadow-sm">
+    <div class="px-4 py-3 flex justify-between items-center">
+      <h1 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+        <i data-lucide="film" class="w-5 h-5 text-indigo-600"></i>
+        영화 시간표 대시보드
+      </h1>
+      <span class="text-xs bg-indigo-50 text-indigo-600 px-2 py-1 rounded font-medium">실시간 연동</span>
+    </div>
+
+    <!-- 상단 탭 버튼 영역 (모바일 가로 스크롤 지원) -->
+    <div class="border-t">
+      <div class="flex overflow-x-auto whitespace-nowrap scrollbar-none px-2" id="tab-container">
+        <button onclick="switchTab('ku')" id="tab-ku" class="tab-btn px-4 py-3 text-sm font-bold border-b-2 border-indigo-600 text-indigo-600 transition-all">
+          KU 시네마
+        </button>
+        <button onclick="switchTab('seoul')" id="tab-seoul" class="tab-btn px-4 py-3 text-sm font-bold border-b-2 border-transparent text-gray-400 hover:text-gray-600 transition-all">
+          서울아트시네마
+        </button>
+        <button onclick="switchTab('megabox')" id="tab-megabox" class="tab-btn px-4 py-3 text-sm font-bold border-b-2 border-transparent text-gray-400 hover:text-gray-600 transition-all">
+          메가박스 군자
+        </button>
+        <button onclick="switchTab('wangcgv')" id="tab-wangcgv" class="tab-btn px-4 py-3 text-sm font-bold border-b-2 border-transparent text-gray-400 hover:text-gray-600 transition-all">
+          왕십리 CGV
+        </button>
+        <button onclick="switchTab('laika')" id="tab-laika" class="tab-btn px-4 py-3 text-sm font-bold border-b-2 border-transparent text-gray-400 hover:text-gray-600 transition-all">
+          라이카 시네마
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 컨텐츠 영역 -->
+  <main class="flex-1 p-3 md:p-4 flex flex-col">
+    <!-- 영화관별 뷰 컨테이너 (flex-1로 남은 높이를 가득 채웁니다) -->
+    <div class="flex-1 relative bg-white border rounded-xl shadow-sm overflow-hidden flex flex-col min-h-[500px]">
+      
+      <!-- KU 시네마 -->
+      <div id="content-ku" class="tab-content w-full h-full flex-1 scroll-container">
+        <!-- 자체 홈페이지 구조상 스케일링 필요 -->
+        <div class="w-full h-full overflow-auto" style="-webkit-overflow-scrolling: touch;">
+          <iframe 
+            src="https://kucinema.net/timetable/" 
+            class="w-[125%] h-[1500px] origin-top-left scale-[1.0] md:scale-[1.2]"
+            title="KU Cinema Timetable">
+          </iframe>
+        </div>
+      </div>
+
+      <!-- 서울아트시네마 -->
+      <div id="content-seoul" class="tab-content w-full h-full flex-1 scroll-container hidden">
+        <div class="w-full h-full overflow-auto" style="-webkit-overflow-scrolling: touch;">
+          <iframe 
+            src="https://www.cinematheque.seoul.kr/bbs/content.php?co_id=timetable" 
+            class="w-full h-[1500px]"
+            title="Seoul Art Cinema Timetable">
+          </iframe>
+        </div>
+      </div>
+
+      <!-- 메가박스 군자 (모바일 최적화 링크 연동 + 아래쪽 가림막 해결을 위해 높이 강제 설정 및 감싸기) -->
+      <div id="content-megabox" class="tab-content w-full h-full flex-1 scroll-container hidden">
+        <div class="w-full h-full overflow-auto" style="-webkit-overflow-scrolling: touch;">
+          <iframe 
+            src="https://m.place.naver.com/theater/1396259461/movie" 
+            class="w-full h-[2200px]"
+            title="Megabox Gunja Timetable">
+          </iframe>
+        </div>
+      </div>
+
+      <!-- 왕십리 CGV (모바일 최적화 링크 연동 + 아래쪽 가림막 해결을 위해 높이 강제 설정 및 감싸기) -->
+      <div id="content-wangcgv" class="tab-content w-full h-full flex-1 scroll-container hidden">
+        <div class="w-full h-full overflow-auto" style="-webkit-overflow-scrolling: touch;">
+          <iframe 
+            src="https://m.place.naver.com/theater/12964379/movie" 
+            class="w-full h-[2200px]"
+            title="Wangsimni CGV Timetable">
+          </iframe>
+        </div>
+      </div>
+
+      <!-- 라이카 시네마 (모바일 최적화 링크 연동 + 아래쪽 가림막 해결을 위해 높이 강제 설정 및 감싸기) -->
+      <div id="content-laika" class="tab-content w-full h-full flex-1 scroll-container hidden">
+        <div class="w-full h-full overflow-auto" style="-webkit-overflow-scrolling: touch;">
+          <iframe 
+            src="https://m.place.naver.com/theater/1156408497/movie" 
+            class="w-full h-[2200px]"
+            title="Laika Cinema Timetable">
+          </iframe>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    // 탭 전환 함수
+    function switchTab(tabId) {
+      // 1. 모든 탭 버튼 스타일 초기화
+      const buttons = document.querySelectorAll('.tab-btn');
+      buttons.forEach(btn => {
+        btn.classList.remove('border-indigo-600', 'text-indigo-600');
+        btn.classList.add('border-transparent', 'text-gray-400');
+      });
+
+      // 2. 선택된 탭 버튼 활성화 스타일 적용
+      const activeBtn = document.getElementById(`tab-${tabId}`);
+      if (activeBtn) {
+        activeBtn.classList.remove('border-transparent', 'text-gray-400');
+        activeBtn.classList.add('border-indigo-600', 'text-indigo-600');
+      }
+
+      // 3. 모든 컨텐츠 숨기기
+      const contents = document.querySelectorAll('.tab-content');
+      contents.forEach(content => {
+        content.classList.add('hidden');
+      });
+
+      // 4. 선택된 컨텐츠 보이기
+      const activeContent = document.getElementById(`content-${tabId}`);
+      if (activeContent) {
+        activeContent.classList.remove('hidden');
+      }
+    }
+
+    // 아이콘 렌더링 및 초기 설정
+    window.onload = function() {
+      lucide.createIcons();
+      // 첫 화면 로드 시 KU 시네마 탭 활성화
+      switchTab('ku');
+    }
+  </script>
+</body>
+</html>
