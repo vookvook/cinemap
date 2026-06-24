@@ -43,6 +43,12 @@
       0% { transform: translateY(0); }
       100% { transform: translateY(-6px); }
     }
+    /* 지도가 컨테이너 내에서 완전히 고착되도록 강제 스타일 지정 */
+    #map {
+      width: 100% !important;
+      height: 100% !important;
+      min-height: 100%;
+    }
   </style>
 </head>
 <body class="bg-zinc-50 h-[100dvh] flex flex-col font-sans overflow-hidden select-none">
@@ -517,6 +523,15 @@
     let selectedMovieSubFilter = ''; // 작품별 포스터 필터링용 변수
     let directorsList = [];
 
+    // 명시적인 지도 객체 및 제어 라이브러리 글로벌 변수 선언 (미해결 리사이즈 에러 대응)
+    let map = null;
+    let markersGroup = null;
+    let clickMarker = null;
+    let lastClickedCoords = null;
+    let lastClickedAddressText = "";
+    let currentStillCutsBase64 = [];
+    let currentRealPhotosBase64 = [];
+
     // 기본 등록 감독 프리셋 데이터셋
     const DEFAULT_DIRECTORS = [
       { id: "dir-preset-1", name: "페드로 알모도바르", shortName: "알모도바르", emoji: "🎨" },
@@ -849,15 +864,18 @@
       document.getElementById('mydetail-address').textContent = loc.address || "주소 미등록";
       document.getElementById('mydetail-desc').textContent = loc.desc;
 
-      // [수정] 마이CINE 상세 뷰 내에서 콘텐츠를 영구 삭제할 수 있는 안전한 삭제 이벤트 연동
+      // [수정] 마이CINE 상세 뷰 내에서 콘텐츠를 영구 삭제할 시 안전하게 확인을 묻고 이전 페이지 복원 및 전용 토스트 출력
       const deletePageBtn = document.getElementById('btn-delete-spot-page');
       deletePageBtn.onclick = () => {
         showCustomConfirm(
           "촬영지 영구 삭제",
           `'${loc.title}' 촬영지 기록을 내 보관함에서 영구히 삭제하시겠습니까?`,
           () => {
-            deleteSpot(loc.id);
+            filmingLocations = filmingLocations.filter(item => item.id !== loc.id);
+            saveLocationsToStorage();
+            renderMarkers();
             switchPage('mycine');
+            showToast("삭제가 완료되었습니다.");
           }
         );
       };
@@ -978,13 +996,14 @@
         navCut.classList.add('text-indigo-600');
         navCut.classList.remove('text-gray-400');
         
+        // [중요 개선] 비동기 타이밍 이슈로 지도가 찌그러지는 버그 수정용 시간차 리사이징 invalidate 호출
         setTimeout(() => {
           if (!map) {
             initMap();
           } else {
             map.invalidateSize();
           }
-        }, 100);
+        }, 150);
       } else if (pageId === 'mycine') {
         navMyCine.classList.add('text-indigo-600');
         navMyCine.classList.remove('text-gray-400');
@@ -1012,7 +1031,7 @@
       }
     }
 
-    // 지도 초기화 및 마커 렌더링
+    // [마커 및 맵 정밀 복구] 지도 초기화 및 마커 렌더링
     function initMap() {
       map = L.map('map', {
         zoomControl: false 
@@ -1060,11 +1079,17 @@
         fetchAddressFromCoords(lat, lng);
       });
 
+      // [수정] 지도를 직접 잡고 드래그하여 멀리 보낼때만 핀 소멸시키고 줌 인/아웃 시에는 유지
       map.on('dragstart', function() {
         hideTempMarkerAndButton();
       });
 
       renderMarkers();
+
+      // 최초 드로우 오작동 방지용 강제 렌더 사이즈 측정 동기화
+      setTimeout(() => {
+        if (map) map.invalidateSize();
+      }, 100);
     }
 
     // 플로팅 검색바 노출/숨김 기능
@@ -1439,7 +1464,7 @@
       document.getElementById('detail-desc').innerText = loc.desc;
       document.getElementById('detail-address').innerText = loc.address || "등록된 주소 정보 없음";
 
-      // [수정] 지도 마커 팝업 삭제를 위해 커스텀 확인 창 함수 호출
+      // [수정] 지도 마커 팝업 삭제를 위해 커스텀 확인 창 함수 호출 및 가이드 문구 통일
       const deleteBtn = document.getElementById('btn-delete-spot');
       deleteBtn.onclick = () => {
         showCustomConfirm(
@@ -1500,7 +1525,7 @@
       saveLocationsToStorage();
       renderMarkers();
       closeDetailDrawer();
-      showToast("촬영지가 지도에서 깔끔하게 삭제되었습니다.");
+      showToast("삭제가 완료되었습니다.");
     }
 
     function viewFullImage(src) {
@@ -1713,6 +1738,7 @@
       }, 3000);
     }
 
+    // [로딩 엔진 연동 완료]
     window.onload = function() {
       loadDirectorsFromStorage();
       loadLocationsFromStorage();
