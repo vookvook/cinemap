@@ -136,35 +136,33 @@
       <!-- 지도가 탭 위 전체를 가득 채우는 풀스크린 레이아웃 -->
       <div id="map" class="w-full h-full z-10"></div>
 
-      <!-- 상단 좌측/중앙: 영화 감독 필터 칩 영역 -->
-      <div class="absolute top-4 left-4 z-20 flex gap-2 overflow-x-auto scrollbar-none pr-16 max-w-[calc(100vw-80px)]">
-        <button id="filter-all" onclick="filterByDirector('all')" class="bg-indigo-600 text-white px-3.5 py-2.5 rounded-full shadow-lg flex items-center gap-1.5 whitespace-nowrap text-xs font-black transition-all">
-          <span>🎬</span> 전체
-        </button>
-        <button id="filter-almodovar" onclick="filterByDirector('페드로 알모도바르')" class="bg-white text-gray-700 px-3.5 py-2.5 rounded-full shadow-lg flex items-center gap-1.5 whitespace-nowrap text-xs font-extrabold border border-gray-100 transition-all hover:bg-zinc-50">
-          <span>🎨</span> 알모도바르
-        </button>
-        <button id="filter-park" onclick="filterByDirector('박찬욱')" class="bg-white text-gray-700 px-3.5 py-2.5 rounded-full shadow-lg flex items-center gap-1.5 whitespace-nowrap text-xs font-extrabold border border-gray-100 transition-all hover:bg-zinc-50">
-          <span>🔨</span> 박찬욱
-        </button>
-        <button id="filter-lynch" onclick="filterByDirector('데이비드 린치')" class="bg-white text-gray-700 px-3.5 py-2.5 rounded-full shadow-lg flex items-center gap-1.5 whitespace-nowrap text-xs font-extrabold border border-gray-100 transition-all hover:bg-zinc-50">
-          <span>🌀</span> 데이비드 린치
-        </button>
-        <button id="filter-koreeda" onclick="filterByDirector('고레에다 히로카즈')" class="bg-white text-gray-700 px-3.5 py-2.5 rounded-full shadow-lg flex items-center gap-1.5 whitespace-nowrap text-xs font-extrabold border border-gray-100 transition-all hover:bg-zinc-50">
-          <span>🏠</span> 고레에다
-        </button>
+      <!-- 상단 좌측/중앙: 영화 감독 필터 칩 영역 (동적 렌더링으로 변경) -->
+      <div id="director-filter-container" class="absolute top-4 left-4 z-20 flex gap-2 overflow-x-auto scrollbar-none pr-16 max-w-[calc(100vw-80px)]">
+        <!-- 동적으로 영화 감독 필터 버튼들이 마운트됩니다 -->
       </div>
 
       <!-- 상단 우측: 플로팅 원형 컨트롤 버튼 영역 -->
       <div class="absolute top-4 right-4 z-20 flex flex-col gap-3.5">
-        <!-- 등록하기 버튼 (+) -->
-        <button onclick="openAddLocationPage(false)" class="bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white w-12 h-12 rounded-full shadow-xl flex items-center justify-center transition-all">
+        <!-- 등록하기 버튼 (+) -> 팝오버 메뉴 실행 방식으로 변경 -->
+        <button onclick="togglePlusMenu()" class="bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white w-12 h-12 rounded-full shadow-xl flex items-center justify-center transition-all relative">
           <i data-lucide="plus" class="w-6 h-6"></i>
         </button>
 
         <!-- 검색창 토글 버튼 (동그라미 검색 플로팅 버튼 - 인풋필드를 절대 가리지 않는 구조) -->
         <button id="btn-search-toggle" onclick="toggleSearchInput()" class="bg-white hover:bg-zinc-50 active:scale-95 text-gray-700 w-12 h-12 rounded-full shadow-xl flex items-center justify-center border border-zinc-100 transition-all">
           <i data-lucide="search" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- (+) 버튼 클릭 시 노출될 플로팅 팝오버 메뉴 선택지 -->
+      <div id="plus-menu-popover" class="absolute right-4 top-[70px] z-30 bg-white border border-gray-100 rounded-2xl shadow-2xl p-2 w-48 hidden flex flex-col gap-1 transition-all duration-200 origin-top-right transform scale-95 opacity-0">
+        <button onclick="selectPlusOption('location')" class="flex items-center gap-2 px-3.5 py-3 text-xs font-black text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-all">
+          <i data-lucide="camera" class="w-4 h-4 text-indigo-500"></i>
+          명장면 추가하기
+        </button>
+        <button onclick="selectPlusOption('director')" class="flex items-center gap-2 px-3.5 py-3 text-xs font-black text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-all border-t border-zinc-50">
+          <i data-lucide="user-plus" class="w-4 h-4 text-indigo-500"></i>
+          감독 추가하기
         </button>
       </div>
 
@@ -353,6 +351,40 @@
     </div>
   </nav>
 
+  <!-- 새로운 감독 추가용 모달 다이얼로그 (새로 추가) -->
+  <div id="add-director-modal" class="fixed inset-0 bg-black/60 z-[110] flex items-center justify-center p-4 hidden">
+    <div class="bg-white w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl flex flex-col">
+      <!-- 모달 헤더 -->
+      <div class="p-5 bg-indigo-600 text-white flex justify-between items-center shrink-0">
+        <h3 class="font-black text-sm flex items-center gap-1.5">
+          <i data-lucide="user-plus" class="w-5 h-5"></i>
+          새로운 영화 감독 추가
+        </h3>
+        <button onclick="closeAddDirectorModal()" class="p-1 hover:bg-indigo-700 rounded-full transition-colors">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <!-- 모달 폼 -->
+      <form onsubmit="handleNewDirectorSubmit(event)" class="p-6 space-y-4">
+        <div>
+          <label class="block text-xs font-black text-gray-600 mb-1.5">감독 성함 (전체 이름)</label>
+          <input type="text" id="form-dir-name" required class="w-full border border-gray-200 px-4 py-3 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 bg-gray-50 focus:bg-white transition-colors" placeholder="예: 봉준호">
+        </div>
+        <div>
+          <label class="block text-xs font-black text-gray-600 mb-1.5">대표 이모지 (선택)</label>
+          <div class="flex gap-2">
+            <input type="text" id="form-dir-emoji" class="w-16 border border-gray-200 px-3 py-3 text-sm rounded-xl text-center focus:ring-2 focus:ring-indigo-500 bg-gray-50 focus:bg-white transition-colors" placeholder="👤" value="👤" maxlength="2">
+            <p class="text-[10px] text-gray-400 self-center">이모티콘이나 이모지 1개를 적어주세요.</p>
+          </div>
+        </div>
+        <div class="pt-2 flex gap-2">
+          <button type="button" onclick="closeAddDirectorModal()" class="w-1/3 border border-gray-200 font-bold py-3.5 rounded-xl text-gray-600 text-xs hover:bg-gray-50 transition-colors">취소</button>
+          <button type="submit" class="w-2/3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl text-xs transition-colors shadow-md">감독 등록하기</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- 토스트 알림창 -->
   <div id="toast" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-zinc-900 text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-xl opacity-0 translate-y-3 pointer-events-none transition-all duration-300 z-[110] flex items-center gap-1.5">
     <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i>
@@ -403,6 +435,123 @@
 
     let filmingLocations = [];
     let activeFilter = 'all';
+    let directorsList = [];
+
+    // 기본 등록 감독 프리셋 데이터셋
+    const DEFAULT_DIRECTORS = [
+      { id: "dir-preset-1", name: "페드로 알모도바르", shortName: "알모도바르", emoji: "🎨" },
+      { id: "dir-preset-2", name: "박찬욱", shortName: "박찬욱", emoji: "🔨" },
+      { id: "dir-preset-3", name: "데이비드 린치", shortName: "린치", emoji: "🌀" },
+      { id: "dir-preset-4", name: "고레에다 히로카즈", shortName: "고레에다", emoji: "🏠" }
+    ];
+
+    // 감독 데이터셋 로컬스토리지 로드
+    function loadDirectorsFromStorage() {
+      const stored = localStorage.getItem('cineMapSavedDirectors');
+      if (stored) {
+        directorsList = JSON.parse(stored);
+      } else {
+        directorsList = [...DEFAULT_DIRECTORS];
+        saveDirectorsToStorage();
+      }
+    }
+
+    // 감독 데이터셋 로컬스토리지 보존
+    function saveDirectorsToStorage() {
+      localStorage.setItem('cineMapSavedDirectors', JSON.stringify(directorsList));
+    }
+
+    // 감독 필터 칩 동적 렌더링 함수
+    function renderDirectorFilters() {
+      const container = document.getElementById('director-filter-container');
+      if (!container) return;
+
+      let html = `
+        <button id="filter-all" onclick="filterByDirector('all')" class="${activeFilter === 'all' ? 'bg-indigo-600 text-white font-black' : 'bg-white text-gray-700 font-extrabold border border-gray-100 hover:bg-zinc-50'} px-3.5 py-2.5 rounded-full shadow-lg flex items-center gap-1.5 whitespace-nowrap text-xs transition-all">
+          <span>🎬</span> 전체
+        </button>
+      `;
+
+      directorsList.forEach(dir => {
+        const isActive = activeFilter === dir.name;
+        const btnClass = isActive 
+          ? 'bg-indigo-600 text-white font-black' 
+          : 'bg-white text-gray-700 font-extrabold border border-gray-100 hover:bg-zinc-50';
+        
+        html += `
+          <button id="filter-${dir.id}" onclick="filterByDirector('${dir.name}')" class="${btnClass} px-3.5 py-2.5 rounded-full shadow-lg flex items-center gap-1.5 whitespace-nowrap text-xs transition-all">
+            <span>${dir.emoji || '👤'}</span> ${dir.shortName || dir.name}
+          </button>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    // (+) 원형 버튼 토글 인터랙션 처리
+    function togglePlusMenu() {
+      const popover = document.getElementById('plus-menu-popover');
+      const isHidden = popover.classList.contains('hidden');
+      if (isHidden) {
+        popover.classList.remove('hidden');
+        setTimeout(() => {
+          popover.classList.remove('scale-95', 'opacity-0');
+          popover.classList.add('scale-100', 'opacity-100');
+        }, 10);
+      } else {
+        popover.classList.add('scale-95', 'opacity-0');
+        popover.classList.remove('scale-100', 'opacity-100');
+        setTimeout(() => popover.classList.add('hidden'), 200);
+      }
+    }
+
+    // (+) 선택지 옵션 제어 제어기
+    function selectPlusOption(option) {
+      togglePlusMenu(); // 메뉴 닫기
+
+      if (option === 'location') {
+        openAddLocationPage(false);
+      } else if (option === 'director') {
+        openAddDirectorModal();
+      }
+    }
+
+    // 감독 추가용 폼 제어 모달 기능
+    function openAddDirectorModal() {
+      document.getElementById('add-director-modal').classList.remove('hidden');
+      document.getElementById('form-dir-name').value = '';
+      document.getElementById('form-dir-emoji').value = '👤';
+      lucide.createIcons();
+    }
+
+    function closeAddDirectorModal() {
+      document.getElementById('add-director-modal').classList.add('hidden');
+    }
+
+    function handleNewDirectorSubmit(e) {
+      e.preventDefault();
+      const name = document.getElementById('form-dir-name').value.trim();
+      let emoji = document.getElementById('form-dir-emoji').value.trim();
+      if (!emoji) emoji = '👤';
+
+      if (directorsList.some(d => d.name.toLowerCase() === name.toLowerCase())) {
+        showToast("이미 등록되어 있는 동일한 이름의 영화 감독입니다.");
+        return;
+      }
+
+      const newDir = {
+        id: `dir-${Date.now()}`,
+        name: name,
+        shortName: name.length > 5 ? name.substring(0, 4) + '..' : name,
+        emoji: emoji
+      };
+
+      directorsList.push(newDir);
+      saveDirectorsToStorage();
+      renderDirectorFilters();
+      closeAddDirectorModal();
+      showToast(`'${name}' 감독 정보가 성공적으로 지도에 업데이트되었습니다!`);
+    }
 
     // 로컬스토리지 로드 함수
     function loadLocationsFromStorage() {
@@ -569,25 +718,7 @@
     // 6. 감독 필터링 비즈니스 로직
     function filterByDirector(directorName) {
       activeFilter = directorName;
-      
-      // 기존 필터링 클래스 초기화
-      const filters = ['all', 'almodovar', 'park', 'lynch', 'koreeda'];
-      filters.forEach(f => {
-        const btn = document.getElementById(`filter-${f}`);
-        if (btn) {
-          btn.className = "bg-white text-gray-700 px-3.5 py-2.5 rounded-full shadow-lg flex items-center gap-1.5 whitespace-nowrap text-xs font-extrabold border border-gray-100 transition-all hover:bg-zinc-50";
-        }
-      });
-
-      // 클릭한 필터 활성화 색상 입히기
-      let activeBtnId = 'filter-all';
-      if (directorName === '페드로 알모도바르') activeBtnId = 'filter-almodovar';
-      else if (directorName === '박찬욱') activeBtnId = 'filter-park';
-      else if (directorName === '데이비드 린치') activeBtnId = 'filter-lynch';
-      else if (directorName === '고레에다 히로카즈') activeBtnId = 'filter-koreeda';
-
-      document.getElementById(activeBtnId).className = "bg-indigo-600 text-white px-3.5 py-2.5 rounded-full shadow-lg flex items-center gap-1.5 whitespace-nowrap text-xs font-black transition-all";
-
+      renderDirectorFilters();
       renderMarkers();
       closeDetailDrawer();
     }
@@ -1176,9 +1307,11 @@
 
     // 초기 실행 환경 구성
     window.onload = function() {
-      // 로컬데이터 자동 연동
+      // 감독 및 촬영지 정보 로컬데이터 자동 연동
+      loadDirectorsFromStorage();
       loadLocationsFromStorage();
       
+      renderDirectorFilters();
       lucide.createIcons();
       switchTheaterTab('ku');
       switchPage('theater');
