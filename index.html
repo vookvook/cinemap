@@ -5,9 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>CineMap - 영화 시간표 & 관람자 모드</title>
 
-  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <style>
@@ -36,16 +34,22 @@
       text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
       letter-spacing: 1px;
     }
+    /* 8bit 미니게임 맵 배경 */
+    .pixel-map-bg {
+      background-color: #8bba68;
+      background-image: 
+        linear-gradient(45deg, #7da95e 25%, transparent 25%, transparent 75%, #7da95e 75%, #7da95e),
+        linear-gradient(45deg, #7da95e 25%, transparent 25%, transparent 75%, #7da95e 75%, #7da95e);
+      background-size: 20px 20px;
+      background-position: 0 0, 10px 10px;
+    }
   </style>
 </head>
 <body class="bg-zinc-50 h-[100dvh] flex flex-col font-sans overflow-hidden select-none">
 
-  <!-- [메인 콘텐츠 컨테이너] -->
   <main class="flex-1 overflow-hidden relative flex flex-col">
 
-    <!-- ==================== MENU 1: 영화관 시간표 ==================== -->
     <div id="page-theater" class="page-content w-full h-full flex flex-col overflow-hidden">
-      <!-- 상단 영화관 서브 탭 버튼 영역 -->
       <div class="bg-white border-b shrink-0">
         <div class="flex overflow-x-auto whitespace-nowrap scrollbar-none px-2" id="theater-tab-container">
           <button onclick="switchTheaterTab('ku')" id="tab-ku" class="theater-tab-btn px-4 py-3 text-sm font-bold border-b-2 border-indigo-600 text-indigo-600 transition-all">
@@ -66,10 +70,8 @@
         </div>
       </div>
 
-      <!-- 극장 시간표 iframe 본문 영역 -->
       <div class="flex-1 p-3 md:p-4 overflow-hidden flex flex-col">
         <div class="flex-1 relative bg-white border rounded-xl shadow-sm overflow-hidden flex flex-col">
-          <!-- KU 시네마 -->
           <div id="content-ku" class="theater-tab-content w-full h-full flex-1 scroll-container">
             <div class="w-full h-full overflow-auto" style="-webkit-overflow-scrolling: touch;">
               <iframe 
@@ -79,7 +81,6 @@
               </iframe>
             </div>
           </div>
-          <!-- 서울아트시네마 -->
           <div id="content-seoul" class="theater-tab-content w-full h-full flex-1 scroll-container hidden">
             <div class="w-full h-full overflow-auto" style="-webkit-overflow-scrolling: touch;">
               <iframe 
@@ -89,7 +90,6 @@
               </iframe>
             </div>
           </div>
-          <!-- 메가박스 군자 -->
           <div id="content-megabox" class="theater-tab-content w-full h-full flex-1 relative overflow-hidden hidden">
             <iframe 
               src="https://m.place.naver.com/theater/1396259461/movie" 
@@ -97,7 +97,6 @@
               title="Megabox Gunja Timetable">
             </iframe>
           </div>
-          <!-- 왕십리 CGV -->
           <div id="content-wangcgv" class="theater-tab-content w-full h-full flex-1 relative overflow-hidden hidden">
             <iframe 
               src="https://m.place.naver.com/theater/12964379/movie" 
@@ -105,7 +104,6 @@
               title="Wangsimni CGV Timetable">
             </iframe>
           </div>
-          <!-- 라이카 시네마 -->
           <div id="content-laika" class="theater-tab-content w-full h-full flex-1 relative overflow-hidden hidden">
             <iframe 
               src="https://m.place.naver.com/theater/1156408497/movie" 
@@ -118,26 +116,20 @@
     </div>
 
 
-    <!-- ==================== MENU 2: 관람자 (책장 리스트 & 극장 좌석 모드) ==================== -->
-    <div id="page-spectator" class="page-content w-full h-full flex flex-col overflow-hidden hidden bg-amber-50/10">
-      <!-- 상단 제목 바 -->
-      <div class="bg-white border-b shrink-0 px-4 py-4 flex justify-between items-center">
-        <h2 class="text-lg font-black text-amber-950 flex items-center gap-1.5">
-          <i data-lucide="book-open" class="w-5 h-5 text-amber-800"></i>
-          시네마 감독 책장
+    <div id="page-spectator" class="page-content w-full h-full flex flex-col overflow-hidden hidden">
+      <div class="bg-white border-b shrink-0 px-4 py-4 flex justify-between items-center shadow-sm z-10">
+        <h2 class="text-lg font-black text-emerald-900 flex items-center gap-1.5">
+          <i data-lucide="gamepad-2" class="w-5 h-5 text-emerald-600"></i>
+          시네마 타운
         </h2>
-        <span id="spectator-shelf-count" class="text-xs bg-amber-100 text-amber-900 px-2.5 py-1 rounded-full font-bold"></span>
+        <span id="spectator-shelf-count" class="text-xs bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full font-bold shadow-inner border border-emerald-200"></span>
       </div>
 
-      <!-- 세로 정렬 감독 책장 보드 -->
-      <div id="bookshelf-scroll-container" class="flex-1 overflow-y-auto p-4 space-y-6 scroll-container scrollbar-none">
-        <!-- 감독별 나무 책장 리스트가 동적으로 렌더링됩니다 -->
-      </div>
+      <div id="pixel-map-container" class="flex-1 overflow-y-auto p-6 scroll-container scrollbar-none pixel-map-bg flex flex-wrap content-start gap-6 justify-center">
+        </div>
     </div>
 
-    <!-- ==================== 가상 영화관 스크린 예매형 좌석 룸 뷰 페이지 ==================== -->
     <div id="page-theater-booking" class="page-content relative w-full h-full bg-zinc-950 z-40 flex flex-col hidden overflow-hidden">
-      <!-- 헤더 -->
       <div class="bg-zinc-900 border-b border-zinc-800 px-4 py-4 shrink-0 flex justify-between items-center text-white">
         <button onclick="switchPage('spectator')" class="p-1 hover:bg-zinc-800 rounded-full transition-colors flex items-center">
           <i data-lucide="arrow-left" class="w-5 h-5"></i>
@@ -149,36 +141,27 @@
         <span class="w-5 h-5"></span>
       </div>
 
-      <!-- 가상 극장 메인 바디 -->
       <div class="flex-1 flex flex-col justify-between p-4 overflow-y-auto scrollbar-none">
         
-        <!-- [스크린 영역] 상단 시네마틱 가상 스크린 및 프로젝터 빔 투사 영역 -->
         <div class="relative w-full py-4 flex flex-col items-center">
-          <!-- 곡선 스크린 데코레이션 -->
           <div class="w-4/5 h-2.5 bg-zinc-800 rounded-t-full shadow-[0_4px_30px_rgba(255,255,255,0.15)] mb-3"></div>
           
-          <!-- 실시간 빔 프로젝터 상영 가상 스크린 (16:9 비율 적용) -->
           <div id="cinema-projection-screen" class="w-full max-w-md aspect-[16/9] bg-zinc-900 border border-zinc-800 rounded-2xl p-0 text-center flex flex-col justify-center items-center relative overflow-hidden transition-all duration-300 shadow-2xl">
-            <!-- 기본 상태 -->
             <div id="projection-screen-default" class="text-zinc-500 flex flex-col items-center gap-2 p-4">
               <i data-lucide="aperture" class="w-7 h-7 text-indigo-500/60 animate-spin" style="animation-duration: 10s"></i>
               <p id="projection-director-banner" class="text-sm font-black tracking-widest text-zinc-300 uppercase"></p>
               <p class="text-[9px] text-zinc-600 mt-2">등록된 시네마 좌석을 탭하여 감상하거나, 빈 좌석을 예매해 보세요.</p>
             </div>
             
-            <!-- 영화 상영 상태 (캐러셀 뷰) -->
             <div id="projection-screen-active" class="hidden w-full h-full relative group">
-              <!-- 이미지 컨테이너 -->
               <img id="projection-bg-img" class="absolute inset-0 w-full h-full object-cover opacity-30" src="" />
               
-              <!-- 콘텐츠 컨테이너 -->
               <div class="absolute inset-0 p-4 flex flex-col justify-end bg-gradient-to-t from-black via-black/50 to-transparent">
                 <span id="projection-movie-badge" class="self-start bg-indigo-900/80 text-indigo-200 text-[10px] font-bold px-2 py-0.5 rounded uppercase mb-1"></span>
                 <h4 id="projection-title" class="text-lg font-black text-white truncate text-left drop-shadow-md"></h4>
                 <p id="projection-desc" class="text-xs text-zinc-300 mt-1 leading-snug line-clamp-2 text-left drop-shadow-md"></p>
               </div>
 
-              <!-- 캐러셀 네비게이션 제어기 -->
               <button onclick="prevProjectionSlide(event)" class="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 p-1.5 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity z-20">
                 <i data-lucide="chevron-left" class="w-4 h-4"></i>
               </button>
@@ -186,7 +169,6 @@
                 <i data-lucide="chevron-right" class="w-4 h-4"></i>
               </button>
               
-              <!-- 이미지 인디케이터 -->
               <div id="projection-indicators" class="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-20">
               </div>
             </div>
@@ -194,17 +176,13 @@
           </div>
         </div>
 
-        <!-- [좌석 선택 바둑판 배열] -->
-        <div class="py-2 flex flex-col items-center pb-20"> <!-- 플로팅 버튼 영역 확보를 위해 pb-20 추가 -->
+        <div class="py-2 flex flex-col items-center pb-20"> 
           <div class="text-[10px] font-bold text-zinc-600 mb-4 tracking-widest">THEATER SEATING CHART</div>
           
-          <!-- 40석 구조 (8열 5행) -->
           <div class="grid grid-cols-8 gap-2 max-w-md w-full px-2" id="theater-seat-grid">
-            <!-- 좌석 단추들이 1~40 형태로 동적 바인딩됩니다 -->
-          </div>
+            </div>
         </div>
 
-        <!-- 좌석 가이드 범례 바 -->
         <div class="flex justify-center gap-4 py-2 shrink-0 border-t border-zinc-900 mt-4 mb-8">
           <div class="flex items-center gap-1.5">
             <div class="w-4 h-4 bg-zinc-800 border border-zinc-700 rounded-md"></div>
@@ -218,7 +196,6 @@
 
       </div>
 
-      <!-- 플로팅 예매 버튼 영역 -->
       <div id="floating-booking-bar" class="absolute bottom-6 left-0 w-full px-6 hidden z-50 transition-all duration-300">
         <button id="floating-book-btn" class="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.6)] flex items-center justify-center gap-2 border border-indigo-400 hover:bg-indigo-700 active:scale-95 transition-transform">
           <i data-lucide="ticket" class="w-5 h-5"></i>
@@ -228,9 +205,7 @@
 
     </div>
 
-    <!-- ==================== MENU 3: 마이CINE (내가 등록한 명장면 리스트) ==================== -->
     <div id="page-mycine" class="page-content w-full h-full flex flex-col overflow-hidden hidden bg-zinc-50">
-      <!-- 상단 제목 바 -->
       <div class="bg-white border-b shrink-0 px-4 py-4 flex justify-between items-center">
         <h2 class="text-lg font-black text-gray-900 flex items-center gap-1.5">
           <i data-lucide="heart" class="w-5 h-5 text-rose-500 fill-rose-500"></i>
@@ -239,7 +214,6 @@
         <span id="mycine-count" class="text-xs bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded-full font-bold"></span>
       </div>
 
-      <!-- 영화 제목 검색 바 -->
       <div class="p-3 bg-white border-b shrink-0">
         <div class="relative flex items-center bg-zinc-50 border rounded-xl px-3 py-2.5">
           <i data-lucide="search" class="w-4 h-4 text-gray-400 mr-2 shrink-0"></i>
@@ -247,15 +221,11 @@
         </div>
       </div>
 
-      <!-- 콘텐츠 그리드 리스트 영역 -->
       <div class="flex-1 overflow-y-auto p-4 scroll-container scrollbar-none" id="mycine-list-container">
-        <!-- 마이 CINE 아카이브 카드들이 비동기 바인딩됩니다 -->
-      </div>
+        </div>
     </div>
 
-    <!-- ==================== 마이CINE 전용 개별 상세 정보 페이지 ==================== -->
     <div id="page-mycine-detail" class="page-content w-full h-full bg-white z-50 flex flex-col hidden overflow-hidden">
-      <!-- 상세 헤더 -->
       <div class="bg-zinc-50 border-b px-4 py-4 shrink-0 flex justify-between items-center">
         <button onclick="switchPage('mycine')" class="p-1 hover:bg-zinc-200 rounded-full transition-colors flex items-center text-gray-600">
           <i data-lucide="arrow-left" class="w-5 h-5"></i>
@@ -282,13 +252,11 @@
           <h2 id="mydetail-title" class="text-xl font-black text-gray-900 mt-2"></h2>
         </div>
 
-        <!-- 스틸 이미지 다중 프리뷰 -->
         <div>
           <span class="text-xs font-black text-gray-400 block mb-2">① 영화 속 명장면</span>
           <div id="mydetail-still-gallery" class="flex gap-2.5 overflow-x-auto pb-1 scrollbar-none snap-x"></div>
         </div>
 
-        <!-- 실제 사진 다중 프리뷰 -->
         <div>
           <span class="text-xs font-black text-indigo-500 block mb-2">② 내 컷 기록</span>
           <div id="mydetail-real-gallery" class="flex gap-2.5 overflow-x-auto pb-1 scrollbar-none snap-x"></div>
@@ -302,9 +270,7 @@
     </div>
 
 
-    <!-- ==================== 등록/수정 단독 페이지 (네비게이션 은닉, 고정 버튼 레이아웃) ==================== -->
     <div id="page-add-location" class="page-content w-full h-full bg-white z-50 flex flex-col hidden relative">
-      <!-- 페이지 헤더 -->
       <div class="bg-zinc-50 border-b px-4 py-4 shrink-0 flex justify-between items-center">
         <button onclick="closeAddLocationPage()" class="p-1 hover:bg-zinc-200 rounded-full transition-colors flex items-center text-gray-600">
           <i data-lucide="arrow-left" class="w-5 h-5"></i>
@@ -316,22 +282,16 @@
         <span class="w-5 h-5"></span>
       </div>
 
-      <!-- 입력 양식 폼 (flex-1 overflow-y-auto로 스크롤) -->
       <form id="add-location-form" onsubmit="handleNewLocationSubmit(event)" class="p-5 flex-1 overflow-y-auto space-y-5 scrollbar-none">
         
-        <input type="hidden" id="form-edit-id"> <!-- 수정 모드 전용 ID -->
-        <input type="hidden" id="form-seat">    <!-- 예약 매핑 좌석 번호용 -->
-
-        <div class="grid grid-cols-2 gap-3">
+        <input type="hidden" id="form-edit-id"> <input type="hidden" id="form-seat">    <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-bold text-gray-600 mb-1.5">영화 제목 (필수)</label>
             <input type="text" id="form-movie" required class="w-full border border-gray-200 px-4 py-3 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500" placeholder="">
           </div>
-          <!-- 영화 감독 필드 (스마트 제안 시스템 구축) -->
           <div class="relative">
             <label class="block text-xs font-bold text-gray-600 mb-1.5">영화 감독 (필수)</label>
             <input type="text" id="form-director" autocomplete="off" onkeyup="handleDirectorAutoSuggest(this.value)" required class="w-full border border-gray-200 px-4 py-3 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500" placeholder="">
-            <!-- 감독 검색 자동완성 리스트 -->
             <div id="dir-suggest-dropdown" class="absolute left-0 right-0 mt-1 bg-white rounded-xl shadow-xl border border-zinc-100 max-h-36 overflow-y-auto hidden z-30"></div>
           </div>
         </div>
@@ -346,7 +306,6 @@
           <textarea id="form-desc" rows="3" class="w-full border border-gray-200 px-4 py-3 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500" placeholder=""></textarea>
         </div>
 
-        <!-- 이미지 수동 업로드 -->
         <div class="space-y-4">
           <div>
             <label class="block text-xs font-bold text-gray-600 mb-1.5">① 영화 속 명장면 업로드 (여러 장 가능)</label>
@@ -374,7 +333,6 @@
         </div>
       </form>
 
-      <!-- 고정 액션 제어 패널 -->
       <div class="bg-white border-t px-6 py-4 shrink-0 flex gap-3 shadow-[0_-4px_12px_rgba(0,0,0,0.03)] z-20">
         <button type="button" onclick="closeAddLocationPage()" class="w-1/3 border border-gray-200 font-bold py-3.5 rounded-xl text-gray-600 text-sm hover:bg-gray-50 transition-colors">취소</button>
         <button type="button" onclick="triggerFormSubmit()" class="w-2/3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl text-sm transition-colors shadow-md">저장하기</button>
@@ -383,28 +341,23 @@
 
   </main>
 
-  <!-- [하단 앱 고정 네비게이션 탭바] -->
   <nav id="app-bottom-nav" class="bg-white border-t shrink-0 z-40 shadow-lg transition-all duration-300">
     <div class="flex h-16 justify-around items-center">
-      <!-- 탭 1: 영화관 -->
-      <button onclick="switchPage('theater')" id="nav-theater" class="flex flex-col items-center justify-center w-full h-full text-indigo-600 transition-colors">
+      <button onclick="switchPage('theater')" id="nav-theater" class="w-1/3 flex flex-col items-center justify-center h-full text-indigo-600 transition-colors">
         <i data-lucide="film" class="w-5 h-5 mb-1"></i>
         <span class="text-xs font-bold">영화관</span>
       </button>
-      <!-- 탭 2: 관람자 -->
-      <button onclick="switchPage('spectator')" id="nav-spectator" class="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-indigo-600 transition-colors">
+      <button onclick="switchPage('spectator')" id="nav-spectator" class="w-1/3 flex flex-col items-center justify-center h-full text-gray-400 hover:text-indigo-600 transition-colors">
         <i data-lucide="book-open" class="w-5 h-5 mb-1"></i>
         <span class="text-xs font-bold">관람자</span>
       </button>
-      <!-- 탭 3: 마이CINE -->
-      <button onclick="switchPage('mycine')" id="nav-mycine" class="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-indigo-600 transition-colors">
+      <button onclick="switchPage('mycine')" id="nav-mycine" class="w-1/3 flex flex-col items-center justify-center h-full text-gray-400 hover:text-indigo-600 transition-colors">
         <i data-lucide="heart" class="w-5 h-5 mb-1"></i>
         <span class="text-xs font-bold">마이CINE</span>
       </button>
     </div>
   </nav>
 
-  <!-- 새로운 감독 추가용 모달 다이얼로그 -->
   <div id="add-director-modal" class="fixed inset-0 bg-black/60 z-[110] flex items-center justify-center p-4 hidden">
     <div class="bg-white w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl flex flex-col">
       <div class="p-5 bg-indigo-600 text-white flex justify-between items-center shrink-0">
@@ -436,7 +389,6 @@
     </div>
   </div>
 
-  <!-- 브라우저 confirm 대체용 커스텀 안전 확인 모달 다이얼로그 -->
   <div id="confirm-modal" class="fixed inset-0 bg-black/60 z-[210] flex items-center justify-center p-4 hidden">
     <div class="bg-white w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl p-6 space-y-4 flex flex-col">
       <div class="flex items-center gap-2 text-rose-500">
@@ -451,13 +403,11 @@
     </div>
   </div>
 
-  <!-- 토스트 알림창 -->
-  <div id="toast" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-zinc-900 text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-xl opacity-0 translate-y-3 pointer-events-none transition-all duration-300 z-[110] flex items-center gap-1.5">
+  <div id="toast" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-zinc-900 text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-xl opacity-0 translate-y-3 pointer-events-none transition-all duration-300 z-[110] flex items-center gap-1.5 whitespace-nowrap">
     <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i>
     <span id="toast-message">저장 완료!</span>
   </div>
 
-  <!-- [메인 클라이언트 비즈니스 스크립트] -->
   <script>
     const DEFAULT_LOCATIONS = [];
     let filmingLocations = [];
@@ -502,70 +452,54 @@
 
     function saveLocationsToStorage() { localStorage.setItem('cineMapSavedLocations', JSON.stringify(filmingLocations)); }
 
-    // [수정] 신규 추가된 '관람자' 책장 UI 렌더링 함수 - 8bit 픽셀 컨셉 카드
+    // 관람자 8bit 미니게임 맵 렌더링 함수
     function renderBookshelf() {
-      const container = document.getElementById('bookshelf-scroll-container');
+      const container = document.getElementById('pixel-map-container');
       const countLabel = document.getElementById('spectator-shelf-count');
       if (!container) return;
 
-      countLabel.textContent = `책장 ${directorsList.length}층`;
+      countLabel.textContent = `시네마 ${directorsList.length}관`;
       container.innerHTML = '';
       
-      // 화면에 최소한 더하기 버튼은 하나 있어야 하므로 빈 감독 슬롯 하나 생성
       let combinedList = [...directorsList];
       
       combinedList.forEach(dir => {
         const spots = filmingLocations.filter(loc => loc.director === dir.name);
         
-        const row = document.createElement('div');
-        row.className = "bg-white border border-amber-100 rounded-3xl p-5 shadow-sm relative flex flex-col gap-3";
+        const building = document.createElement('div');
+        building.className = "flex flex-col items-center cursor-pointer group";
+        building.onclick = () => openSeatAddWithDirector(dir.name);
         
-        // 책장 위에 나열될 책(영화 콘텐츠) 래퍼
-        const shelf = document.createElement('div');
-        shelf.className = "flex gap-3 overflow-x-auto py-2 px-1 scrollbar-none snap-x relative items-center justify-start";
-
-        // 감독 카드 생성 (8bit 픽셀 컨셉 디자인)
-        const bookCard = document.createElement('div');
-        bookCard.onclick = () => openSeatAddWithDirector(dir.name);
-        bookCard.className = "flex-shrink-0 w-32 aspect-[4/3] bg-zinc-800 border-2 border-zinc-900 rounded-lg overflow-hidden relative shadow-[4px_4px_0px_0px_rgba(0,0,0,0.8)] cursor-pointer hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.8)] transition-all active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.8)] group snap-center flex flex-col items-center justify-center p-2";
-        
-        // 8bit 영화관 아이콘 SVG
-        const pixelCinemaIcon = `
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M4 4H20V20H4V4Z" fill="#3B82F6"/>
-            <path d="M2 2H22V6H2V2Z" fill="#1E40AF"/>
-            <path d="M2 18H22V22H2V18Z" fill="#1E40AF"/>
-            <path d="M6 8H18V16H6V8Z" fill="#93C5FD"/>
-            <path d="M8 10H16V14H8V10Z" fill="#EFF6FF"/>
-          </svg>
-        `;
-
-        bookCard.innerHTML = `
-          <div class="mb-2 opacity-80 group-hover:opacity-100 transition-opacity">
-            ${pixelCinemaIcon}
+        // 8bit 영화관 건물 CSS 조립
+        building.innerHTML = `
+          <div class="w-20 h-20 bg-zinc-800 border-4 border-zinc-900 shadow-[4px_4px_0_0_rgba(0,0,0,0.5)] flex flex-col relative transition-transform group-active:translate-y-1 group-active:shadow-[0px_0px_0_0_rgba(0,0,0,0.5)]">
+             <div class="h-6 w-full bg-rose-600 border-b-4 border-zinc-900 flex items-center justify-center overflow-hidden">
+            
+             </div>
+             <div class="flex-1 flex justify-center items-end pb-1 bg-zinc-700">
+               <div class="w-8 h-8 bg-zinc-900 flex border-2 border-zinc-900">
+                 <div class="w-1/2 h-full bg-cyan-200/40 border-r border-zinc-900"></div>
+                 <div class="w-1/2 h-full bg-cyan-200/40"></div>
+               </div>
+             </div>
+             <div class="absolute -top-3 -right-3 bg-yellow-400 border-2 border-zinc-900 text-zinc-900 text-[10px] font-black px-1.5 py-0.5 z-10">
+               ${spots.length}
+             </div>
           </div>
-          <span class="text-[10px] font-bold text-white text-center break-keep w-full mb-1 pixel-text">${dir.name}</span>
-          <div class="mt-auto">
-            <span class="inline-block bg-zinc-900 text-yellow-400 text-[9px] px-2 py-0.5 rounded border border-zinc-700 shadow-inner pixel-text">${spots.length} 콘텐츠</span>
+          <div class="mt-3 bg-white border-1 border-zinc-900 px-2 pt-0 py-1 group-active:translate-y-1">
+            <span class="text-[10px] font-bold">${dir.name}</span>
           </div>
         `;
         
-        shelf.appendChild(bookCard);
-
-        const woodLine = document.createElement('div');
-        woodLine.className = "h-3 w-full bg-gradient-to-r from-amber-700 via-amber-800 to-amber-900 rounded-full shadow-[inset_0_-2px_4px_rgba(0,0,0,0.4)] shrink-0 -mt-2 border-t border-amber-600";
-
-        row.appendChild(shelf);
-        row.appendChild(woodLine);
-        container.appendChild(row);
+        container.appendChild(building);
       });
 
       // 최하단 새 감독 추가 유도 버튼
       const addDirRow = document.createElement('div');
-      addDirRow.className = "flex justify-center mt-4 pb-8";
+      addDirRow.className = "flex justify-center w-full mt-8 pb-8";
       addDirRow.innerHTML = `
-        <button onclick="openAddDirectorModal()" class="flex items-center gap-2 bg-amber-100 hover:bg-amber-200 text-amber-900 px-4 py-2 rounded-full font-bold text-xs transition-colors shadow-sm border border-amber-200">
-          <i data-lucide="plus" class="w-4 h-4"></i> 새 감독 책장 추가하기
+        <button onclick="openAddDirectorModal()" class="flex items-center gap-2 bg-zinc-900 hover:bg-zinc-800 text-white px-4 py-2 rounded-sm font-bold text-xs border-2 border-zinc-900 active:translate-y-1 active:shadow-[0px_0px_0_0_rgba(0,0,0,0.5)] transition-all pixel-text">
+          <i data-lucide="plus" class="w-4 h-4"></i> 타운 증축하기
         </button>
       `;
       container.appendChild(addDirRow);
@@ -573,7 +507,7 @@
       lucide.createIcons();
     }
 
-    // 감독 카드 클릭 시 해당 스크린룸 이동
+    // 감독 영화관 클릭 시 해당 스크린룸 이동
     function openSeatAddWithDirector(directorName) {
       switchPage('theater-booking');
       loadTheaterDirectorSeats(directorName);
@@ -583,13 +517,10 @@
     function loadTheaterDirectorSeats(directorName) {
       selectedTheaterDirectorName = directorName;
       
-      // 스크린 자막 업데이트
       const banner = document.getElementById('projection-director-banner');
       banner.textContent = `Directed by ${directorName}`;
 
       resetTheaterProjection();
-
-      // 진입 및 초기화 시 플로팅 버튼과 선택 스타일 숨김
       document.getElementById('floating-booking-bar').classList.add('hidden');
 
       const grid = document.getElementById('theater-seat-grid');
@@ -609,7 +540,13 @@
           // 채워진 좌석
           seatBtn.className = "aspect-square rounded-md bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-extrabold text-[10px] shadow-md border border-indigo-500 transition-all flex items-center justify-center relative";
           seatBtn.innerHTML = `<span>${seatCode}</span>`;
-          seatBtn.onclick = () => playMovieOnScreen(matchSpot);
+          seatBtn.onclick = () => {
+            playMovieOnScreen(matchSpot);
+            // 본인이 등록한 항목(여기서는 모두 본인으로 간주) 클릭 시 토스트 노출
+            if(matchSpot.isMine) {
+              showToast("본인이 예매한 내역입니다.");
+            }
+          };
         } else {
           // 비어있는 좌석
           seatBtn.className = "aspect-square rounded-md bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-zinc-500 hover:text-zinc-300 font-medium text-[10px] border border-zinc-700 transition-all flex items-center justify-center";
@@ -628,9 +565,8 @@
       currentProjectionIndex = 0;
     }
 
-    // [수정] 스크린룸 캐러셀 뷰 로직
+    // 스크린룸 캐러셀 뷰 로직
     function playMovieOnScreen(spot) {
-      // 상영된 좌석 클릭 시 플로팅 버튼 숨김 및 좌석 선택 초기화
       document.getElementById('floating-booking-bar').classList.add('hidden');
       document.querySelectorAll('.empty-seat-selected').forEach(el => {
         el.classList.remove('empty-seat-selected', 'ring-2', 'ring-indigo-400', 'bg-zinc-700');
@@ -641,13 +577,12 @@
       const activeScreen = document.getElementById('projection-screen-active');
       activeScreen.classList.remove('hidden');
 
-      // 이미지 합치기 (스틸컷 + 실제사진)
       currentProjectionImages = [];
       if (spot.stillCuts && spot.stillCuts.length > 0) currentProjectionImages.push(...spot.stillCuts);
       if (spot.realPhotos && spot.realPhotos.length > 0) currentProjectionImages.push(...spot.realPhotos);
       
       if (currentProjectionImages.length === 0) {
-        currentProjectionImages.push('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=600&auto=format&fit=crop'); // 기본 이미지
+        currentProjectionImages.push('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=600&auto=format&fit=crop');
       }
 
       currentProjectionIndex = 0;
@@ -663,7 +598,6 @@
       document.getElementById('projection-title').textContent = spot.title;
       document.getElementById('projection-desc').textContent = spot.desc || '등록된 설명이 없습니다.';
 
-      // 인디케이터 그리기
       const indicatorsContainer = document.getElementById('projection-indicators');
       indicatorsContainer.innerHTML = '';
       if (currentProjectionImages.length > 1) {
@@ -695,22 +629,19 @@
       if(matchSpot) updateProjectionView(matchSpot);
     }
 
-    // [수정] 빈 좌석 클릭 시 플로팅 버튼 노출 로직
+    // 빈 좌석 클릭 시 플로팅 버튼 노출 로직
     function bookEmptySeat(directorName, seatCode) {
-      // 1. 기존 선택된 좌석 UI 초기화
       document.querySelectorAll('.empty-seat-selected').forEach(el => {
         el.classList.remove('empty-seat-selected', 'ring-2', 'ring-indigo-400', 'bg-zinc-700');
         el.classList.add('bg-zinc-800');
       });
 
-      // 2. 현재 선택된 좌석 하이라이트 (시각적 피드백 제공)
       const currentSeatBtn = document.getElementById(`seat-btn-${seatCode}`);
       if (currentSeatBtn) {
         currentSeatBtn.classList.add('empty-seat-selected', 'ring-2', 'ring-indigo-400', 'bg-zinc-700');
         currentSeatBtn.classList.remove('bg-zinc-800');
       }
 
-      // 3. 플로팅 버튼 노출 및 데이터 바인딩
       const floatingBar = document.getElementById('floating-booking-bar');
       const floatingBtn = document.getElementById('floating-book-btn');
       const floatingText = document.getElementById('floating-book-text');
@@ -718,18 +649,16 @@
       floatingText.textContent = `${seatCode}번 좌석 예매하기`;
       floatingBar.classList.remove('hidden');
 
-      // 4. 플로팅 버튼 클릭 시 등록 페이지 이동 이벤트
       floatingBtn.onclick = () => {
-        floatingBar.classList.add('hidden'); // 이동 시 버튼 다시 숨기기
+        floatingBar.classList.add('hidden');
         openAddLocationPage();
         document.getElementById('form-director').value = directorName;
         document.getElementById('form-seat').value = seatCode;
       };
     }
 
-    // 메인 페이지 전환
+    // 메인 페이지 전환 로직 (컷발견 제거)
     function switchPage(pageId) {
-      // [수정] 스크린 매칭룸('theater-booking') 또는 등록페이지('add') 진입 시 네비게이션 가림
       if (pageId === 'add' || pageId === 'theater-booking') {
         document.getElementById('app-bottom-nav').classList.add('hidden'); 
       } else {
@@ -743,7 +672,6 @@
       }
 
       document.getElementById('page-add-location').classList.add('hidden');
-
       document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden'));
       document.getElementById(`page-${pageId}`).classList.remove('hidden');
 
@@ -858,6 +786,7 @@
 
     function handleMyCineSearch(val) { renderMyCineArchive(val.trim()); }
 
+    // 마이CINE 티켓형 디자인 렌더링
     function renderMyCineArchive(filterQuery = '') {
       const container = document.getElementById('mycine-list-container');
       const countLabel = document.getElementById('mycine-count');
@@ -873,8 +802,8 @@
       if (listData.length === 0) {
         container.innerHTML = `
           <div class="h-60 flex flex-col items-center justify-center text-center text-gray-400 gap-2">
-            <i data-lucide="heart" class="w-8 h-8 text-gray-300"></i>
-            <p class="text-xs font-bold">아카이브가 비어 있습니다</p>
+            <i data-lucide="ticket" class="w-8 h-8 text-gray-300"></i>
+            <p class="text-xs font-bold">발권된 티켓 내역이 없습니다</p>
           </div>
         `;
         lucide.createIcons();
@@ -885,24 +814,29 @@
       listData.forEach(loc => {
         const thumbnail = loc.stillCuts?.[0] || 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=400&auto=format&fit=crop';
         const card = document.createElement('div');
-        card.className = "bg-white border border-zinc-150 rounded-2xl shadow-sm overflow-hidden flex gap-4 p-3 mb-3 cursor-pointer hover:border-indigo-100 hover:shadow transition-all active:scale-[0.99]";
+        
+        // 티켓 모양의 CSS 구조 적용
+        card.className = "bg-white rounded-xl shadow-sm overflow-hidden flex relative border border-zinc-200 cursor-pointer hover:shadow-md transition-all active:scale-[0.99] mb-4 h-28";
         card.onclick = () => openMyCineDetailPage(loc);
         
         card.innerHTML = `
-          <div class="w-20 h-20 rounded-xl overflow-hidden shrink-0 border bg-zinc-900">
-            <img src="${thumbnail}" class="w-full h-full object-cover" />
+          <div class="w-24 shrink-0 bg-zinc-900 relative border-r-2 border-dashed border-zinc-200">
+            <img src="${thumbnail}" class="w-full h-full object-cover opacity-90" />
           </div>
-          <div class="flex-1 min-w-0 flex flex-col justify-between py-0.5">
-            <div>
-              <div class="flex items-center gap-1.5">
-                <span class="text-[9px] bg-indigo-50 text-indigo-600 font-extrabold px-1.5 py-0.5 rounded-full uppercase truncate max-w-[120px]">${loc.movie}</span>
-                <span class="text-[9px] bg-zinc-100 text-zinc-600 font-bold px-1.5 py-0.5 rounded-full truncate max-w-[80px]">${loc.director || '미지정'}</span>
-              </div>
-              <h4 class="text-sm font-black text-gray-900 mt-1 truncate">${loc.title}</h4>
-            </div>
-            <p class="text-[10px] text-gray-400 truncate flex items-center gap-0.5">
-              ${loc.seat ? `<span class="bg-indigo-100 text-indigo-600 px-1 py-0.5 rounded">좌석 ${loc.seat}</span>` : ''}
-            </p>
+          
+          <div class="absolute left-24 top-0 -mt-2 -ml-2 w-4 h-4 bg-zinc-50 rounded-full border border-zinc-200 z-10"></div>
+          <div class="absolute left-24 bottom-0 -mb-2 -ml-2 w-4 h-4 bg-zinc-50 rounded-full border border-zinc-200 z-10"></div>
+          
+          <div class="flex-1 p-3 py-2 flex flex-col justify-center bg-amber-50/10">
+             <div class="flex items-center gap-1.5 mb-1">
+                <span class="text-[9px] bg-indigo-50 text-indigo-600 font-extrabold px-1.5 py-0.5 rounded-sm uppercase border border-indigo-100">${loc.movie}</span>
+                <span class="text-[9px] text-zinc-500 font-bold px-1.5 py-0.5 border border-zinc-200 rounded-sm bg-white">${loc.director || '미지정'}</span>
+             </div>
+             <h4 class="text-sm font-black text-gray-900 truncate">${loc.title}</h4>
+             <div class="mt-auto flex items-center justify-between border-t border-zinc-200 pt-1.5">
+                <span class="text-[10px] text-zinc-400 font-mono tracking-widest">${loc.seat ? `SEAT ${loc.seat}` : 'NO SEAT'}</span>
+                <i data-lucide="ticket" class="w-3.5 h-3.5 text-zinc-400"></i>
+             </div>
           </div>
         `;
         container.appendChild(card);
@@ -1084,16 +1018,18 @@
             stillCuts, realPhotos
           };
           showToast("아카이브가 성공적으로 수정되었습니다.");
+          switchPage('mycine');
         }
       } else {
         const newLoc = {
           id: `loc-custom-${Date.now()}`,
           movie, director, title, desc,
           stillCuts, realPhotos,
-          seat: seatCode || null 
+          seat: seatCode || null,
+          isMine: true // 본인 생성 콘텐츠 표식 추가
         };
         filmingLocations.unshift(newLoc);
-        showToast("콘텐츠가 성공적으로 저장되었습니다!");
+        showToast("저장 완료되었습니다!");
       }
 
       if (director && !directorsList.some(d => d.name.toLowerCase() === director.toLowerCase())) {
@@ -1114,12 +1050,18 @@
       document.getElementById('preview-still-container').innerHTML = '';
       document.getElementById('preview-real-container').innerHTML = '';
 
-      if (editId) { switchPage('mycine'); } 
-      else if (seatCode) {
-        switchPage('theater-booking');
-        loadTheaterDirectorSeats(director);
-      } else {
-        switchPage('spectator');
+      // 등록 성공 시 바로 시네마 스크린 매칭룸으로 돌아가고, 생성된 좌석을 강제 클릭해 화면에 띄웁니다.
+      if (!editId) {
+        if (seatCode) {
+          switchPage('theater-booking');
+          loadTheaterDirectorSeats(director);
+          setTimeout(() => {
+            const seatBtn = document.getElementById(`seat-btn-${seatCode}`);
+            if (seatBtn) seatBtn.click();
+          }, 100);
+        } else {
+          switchPage('spectator');
+        }
       }
     }
 
@@ -1153,4 +1095,3 @@
   </script>
 </body>
 </html>
-
