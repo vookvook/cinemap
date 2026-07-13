@@ -83,9 +83,20 @@
           </div>
           
           <div id="content-seoul" class="theater-tab-content w-full h-full flex-1 scroll-container hidden bg-white">
-            <div id="seoul-loading" class="absolute inset-0 flex flex-col items-center justify-center bg-white z-10 gap-3">
-              <div class="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-              <p class="text-xs font-semibold text-gray-500">아트시네마 시간표를 생성하는 중...</p>
+            <div id="seoul-loading" class="absolute inset-0 flex flex-col items-center justify-center bg-white z-10 p-6 text-center gap-3">
+              <div id="seoul-spinner" class="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+              <p id="seoul-loading-text" class="text-xs font-semibold text-gray-500 leading-relaxed">
+                아트시네마 시간표 데이터를 파싱하고 있습니다.<br>
+                <span class="text-[11px] text-zinc-400 font-normal">(무료 우회 프록시 서버 통신으로 인해 3~5초 소요될 수 있습니다)</span>
+              </p>
+              <div id="seoul-fail-actions" class="hidden flex flex-col gap-2 mt-2 w-full max-w-xs">
+                <button onclick="fetchSeoulArtCinemaTimetable(true)" class="w-full bg-indigo-600 text-white text-xs font-bold py-2.5 rounded-xl shadow-sm">
+                  🔄 다시 시도하기
+                </button>
+                <a href="https://www.cinematheque.seoul.kr/bbs/content.php?co_id=timetable" target="_blank" class="w-full bg-zinc-100 text-zinc-700 text-xs font-bold py-2.5 rounded-xl text-center border">
+                  🌐 공식 웹사이트에서 직접 보기
+                </a>
+              </div>
             </div>
             <div id="seoul-calendar-container" class="w-full h-full overflow-auto p-1 text-zinc-900">
               </div>
@@ -585,12 +596,10 @@
       updateProjectionView(spot);
     }
 
-    // --- 인앱 네비게이션 및 탭 스위칭 컨트롤러 ---
     function switchPage(pageId) {
       document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden'));
       document.getElementById(`page-${pageId}`).classList.remove('hidden');
       
-      // 하단바 상태 갱신
       document.querySelectorAll('#app-bottom-nav button').forEach(btn => {
         btn.classList.remove('text-indigo-600');
         btn.classList.add('text-gray-400');
@@ -613,48 +622,54 @@
       document.getElementById(`tab-${theaterId}`).classList.remove('border-transparent', 'text-gray-400');
       document.getElementById(`content-${theaterId}`).classList.remove('hidden');
 
-      // 서울아트시네마 전용 동적 크롤링 핸들러 가동
       if (theaterId === 'seoul') {
-        fetchSeoulArtCinemaTimetable();
+        fetchSeoulArtCinemaTimetable(false);
       }
     }
 
-    // --- 서울아트시네마 HTML 스크래핑 및 동적 데이터 가공 엔진 ---
-    function fetchSeoulArtCinemaTimetable() {
+    // --- 수동 새로고침 매커니즘 및 시간초과 디펜스 스크립트 ---
+    function fetchSeoulArtCinemaTimetable(isRetry = false) {
       const container = document.getElementById('seoul-calendar-container');
       const loader = document.getElementById('seoul-loading');
+      const spinner = document.getElementById('seoul-spinner');
+      const loadText = document.getElementById('seoul-loading-text');
+      const failActions = document.getElementById('seoul-fail-actions');
       
-      // 이미 로딩이 완료된 경우 재생성 차단
-      if (container.children.length > 0) {
+      // 재시도가 아니며 이미 데이터 렌더링에 성공했다면 기존 캘린더 유지
+      if (!isRetry && container.children.length > 0) {
         loader.classList.add('hidden');
         return;
       }
 
+      // 상태 초기화 및 로딩 인프라 재가동
       loader.classList.remove('hidden');
+      spinner.classList.remove('hidden');
+      failActions.classList.add('hidden');
+      loadText.innerHTML = `아트시네마 시간표 데이터를 파싱하고 있습니다.<br><span class="text-[11px] text-zinc-400 font-normal">(무료 우회 프록시 서버 통신으로 인해 3~5초 소요될 수 있습니다)</span>`;
 
-      // CORS 우회를 위해 AllOrigins 공공 오픈 프록시 파이프라인 활용
       const targetUrl = 'https://www.cinematheque.seoul.kr/bbs/content.php?co_id=timetable';
+      
+      // AllOrigins 프록시 파이프라인 연동
       fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`)
         .then(response => {
           if (response.ok) return response.json();
-          throw new Error('Network response was not ok.');
+          throw new Error('프록시 서버 응답 실패');
         })
         .then(data => {
+          if (!data || !data.contents) throw new Error('데이터 빈 값 전달됨');
+          
           const parser = new DOMParser();
           const doc = parser.parseFromString(data.contents, 'text/html');
           const originalTable = doc.querySelector('#ctt_con table');
           
           if (!originalTable) {
-            container.innerHTML = `<div class="p-4 text-center text-xs text-rose-500">시간표 데이터를 찾을 수 없습니다. 공식 홈페이지를 확인해 주세요.</div>`;
-            loader.classList.add('hidden');
-            return;
+            throw new Error('시간표 테이블 구조 파싱 불가');
           }
 
           const rows = Array.from(originalTable.querySelectorAll('tr'));
           const calendarData = [];
           const dayMap = { 'Mon': '월', 'Tue': '화', 'Wed': '수', 'Thu': '목', 'Fri': '금', 'Sat': '토', 'Sun': '일' };
 
-          // 1행(날짜) - 2행(영화 링크 묶음) 2중 행 구조 전수 조사
           for (let i = 0; i < rows.length; i += 2) {
             const dateRow = rows[i];
             const movieRow = rows[i + 1];
@@ -663,7 +678,6 @@
             const dateCells = dateRow.querySelectorAll('th, td');
             const movieCells = movieRow.querySelectorAll('th, td');
 
-            // 월요일부터 일요일까지 7개 열 간격 그대로 전개
             for (let col = 0; col < 7; col++) {
               if (!dateCells[col] || !movieCells[col]) continue;
 
@@ -691,24 +705,21 @@
           }
 
           renderSeoulCalendar(calendarData);
+          loader.classList.add('hidden'); // 성공 시 로딩 스크린 완전 차단
         })
         .catch(err => {
-          console.error(err);
-          container.innerHTML = `<div class="p-4 text-center text-xs text-rose-500">시간표 로딩에 실패했습니다. (네트워크 연결 확인 필요)</div>`;
-        })
-        .finally(() => {
-          loader.classList.add('hidden');
+          console.error("Scraping Error: ", err);
+          // 실패 혹은 무한 대기 시 사용자가 즉시 인지하고 선택할 수 있도록 전수 대안 UI 노출
+          spinner.classList.add('hidden');
+          loadText.innerHTML = `<span class="text-rose-500 font-bold block mb-1">⏳ 데이터 수신 및 파싱 시간초과</span>공공 우회 프록시 서버 과부하로 인해 시간표를 가져오지 못했습니다.`;
+          failActions.classList.remove('hidden');
         });
     }
 
-    // 완전히 동일한 반응형 너비를 적용한 7열 모바일 그리드 캘린더 드로잉
     function renderSeoulCalendar(data) {
       const container = document.getElementById('seoul-calendar-container');
       container.innerHTML = '';
 
-      // 상단 월화수목금토일 1행 헤더는 기획 지시대로 제거함
-
-      // 반응형 격자 래퍼 빌딩 (너비 자동 계산 1fr)
       const grid = document.createElement('div');
       grid.className = "w-full grid grid-cols-7 border-t border-l border-zinc-200 bg-white text-zinc-900";
 
@@ -726,7 +737,6 @@
         `;
 
         dayData.movies.forEach(m => {
-          // 예외 문구 포함 모든 영화 항목을 균등한 배경의 카드 구조로 변환
           dayCell += `
             <div onclick='openMovieInfoModal(${JSON.stringify(m).replace(/'/g, "&#39;")})'
                  class="box-border text-[9px] p-1.5 bg-zinc-50 border border-zinc-200 rounded-md border-l-[3px] border-l-indigo-600 cursor-pointer active:bg-indigo-50 active:border-indigo-300 transition-colors leading-tight break-all">
@@ -743,7 +753,6 @@
       container.appendChild(grid);
     }
 
-    // --- 인앱 전용 정보 모달 인터랙션 인터페이스 ---
     function openMovieInfoModal(movie) {
       document.getElementById('modal-title').innerText = movie.title;
       document.getElementById('modal-time').innerText = movie.time;
