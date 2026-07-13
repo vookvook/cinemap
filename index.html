@@ -81,15 +81,16 @@
               </iframe>
             </div>
           </div>
-          <div id="content-seoul" class="theater-tab-content w-full h-full flex-1 scroll-container hidden">
-            <div class="w-full h-full overflow-auto" style="-webkit-overflow-scrolling: touch;">
-              <iframe 
-                src="https://www.cinematheque.seoul.kr/bbs/content.php?co_id=timetable" 
-                class="w-full h-[1500px]"
-                title="Seoul Art Cinema Timetable">
-              </iframe>
+          
+          <div id="content-seoul" class="theater-tab-content w-full h-full flex-1 scroll-container hidden bg-white">
+            <div id="seoul-loading" class="absolute inset-0 flex flex-col items-center justify-center bg-white z-10 gap-3">
+              <div class="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+              <p class="text-xs font-semibold text-gray-500">아트시네마 시간표를 생성하는 중...</p>
             </div>
+            <div id="seoul-calendar-container" class="w-full h-full overflow-auto p-1 text-zinc-900">
+              </div>
           </div>
+
           <div id="content-megabox" class="theater-tab-content w-full h-full flex-1 relative overflow-hidden hidden">
             <iframe 
               src="https://m.place.naver.com/theater/1396259461/movie" 
@@ -408,6 +409,21 @@
     <span id="toast-message">저장 완료!</span>
   </div>
 
+  <div id="movie-info-modal" class="fixed inset-0 bg-black/60 z-[300] flex items-center justify-center p-4 backdrop-blur-[2px] hidden">
+    <div class="bg-white w-full max-w-xs rounded-2xl shadow-2xl p-6 relative flex flex-col">
+      <span onclick="closeMovieInfoModal()" class="absolute top-3 right-4 font-extrabold text-xl text-zinc-400 cursor-pointer hover:text-zinc-600">&times;</span>
+      <div class="inline-block self-start bg-indigo-600 text-white font-extrabold text-[10px] px-2 py-0.5 rounded-md mb-3">상영 정보</div>
+      <h3 id="modal-title" class="text-base font-black text-zinc-900 leading-snug mb-4"></h3>
+      <div class="bg-zinc-50 rounded-xl p-3.5 text-xs text-zinc-600 flex flex-col gap-2 mb-5">
+        <div>⏰ 시작 시간 : <strong id="modal-time" class="text-indigo-600"></strong></div>
+        <div>⏳ 러닝 타임 : <strong id="modal-runtime" class="text-zinc-900"></strong></div>
+      </div>
+      <a id="modal-book-btn" href="#" target="_blank" class="w-full bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-center py-3 rounded-xl text-sm transition-colors">
+        🎟️ 예매하기 (티니티켓 이동)
+      </a>
+    </div>
+  </div>
+
   <script>
     const DEFAULT_LOCATIONS = [];
     let filmingLocations = [];
@@ -416,7 +432,6 @@
     let currentRealPhotosBase64 = [];
     let selectedTheaterDirectorName = "";
 
-    // 캐러셀 상태 변수
     let currentProjectionImages = [];
     let currentProjectionIndex = 0;
 
@@ -452,7 +467,6 @@
 
     function saveLocationsToStorage() { localStorage.setItem('cineMapSavedLocations', JSON.stringify(filmingLocations)); }
 
-    // 관람자 8bit 미니게임 맵 렌더링 함수
     function renderBookshelf() {
       const container = document.getElementById('pixel-map-container');
       const countLabel = document.getElementById('spectator-shelf-count');
@@ -465,17 +479,13 @@
       
       combinedList.forEach(dir => {
         const spots = filmingLocations.filter(loc => loc.director === dir.name);
-        
         const building = document.createElement('div');
         building.className = "flex flex-col items-center cursor-pointer group";
         building.onclick = () => openSeatAddWithDirector(dir.name);
         
-        // 8bit 영화관 건물 CSS 조립
         building.innerHTML = `
           <div class="w-20 h-20 bg-zinc-800 border-4 border-zinc-900 shadow-[4px_4px_0_0_rgba(0,0,0,0.5)] flex flex-col relative transition-transform group-active:translate-y-1 group-active:shadow-[0px_0px_0_0_rgba(0,0,0,0.5)]">
-             <div class="h-6 w-full bg-rose-600 border-b-4 border-zinc-900 flex items-center justify-center overflow-hidden">
-            
-             </div>
+             <div class="h-6 w-full bg-rose-600 border-b-4 border-zinc-900 flex items-center justify-center overflow-hidden"></div>
              <div class="flex-1 flex justify-center items-end pb-1 bg-zinc-700">
                <div class="w-8 h-8 bg-zinc-900 flex border-2 border-zinc-900">
                  <div class="w-1/2 h-full bg-cyan-200/40 border-r border-zinc-900"></div>
@@ -490,11 +500,9 @@
             <span class="text-[10px] font-bold">${dir.name}</span>
           </div>
         `;
-        
         container.appendChild(building);
       });
 
-      // 최하단 새 감독 추가 유도 버튼
       const addDirRow = document.createElement('div');
       addDirRow.className = "flex justify-center w-full mt-8 pb-8";
       addDirRow.innerHTML = `
@@ -503,20 +511,16 @@
         </button>
       `;
       container.appendChild(addDirRow);
-
       lucide.createIcons();
     }
 
-    // 감독 영화관 클릭 시 해당 스크린룸 이동
     function openSeatAddWithDirector(directorName) {
       switchPage('theater-booking');
       loadTheaterDirectorSeats(directorName);
     }
 
-    // 가상 영화관 좌석 렌더링
     function loadTheaterDirectorSeats(directorName) {
       selectedTheaterDirectorName = directorName;
-      
       const banner = document.getElementById('projection-director-banner');
       banner.textContent = `Directed by ${directorName}`;
 
@@ -527,7 +531,6 @@
       if (!grid) return;
       grid.innerHTML = '';
 
-      // 40석 생성
       for (let i = 1; i <= 40; i++) {
         const seatCode = i.toString();
         const matchSpot = filmingLocations.find(loc => loc.director === directorName && loc.seat === seatCode);
@@ -537,23 +540,17 @@
         seatBtn.id = `seat-btn-${seatCode}`;
 
         if (matchSpot) {
-          // 채워진 좌석
           seatBtn.className = "aspect-square rounded-md bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-extrabold text-[10px] shadow-md border border-indigo-500 transition-all flex items-center justify-center relative";
           seatBtn.innerHTML = `<span>${seatCode}</span>`;
           seatBtn.onclick = () => {
             playMovieOnScreen(matchSpot);
-            // 본인이 등록한 항목(여기서는 모두 본인으로 간주) 클릭 시 토스트 노출
-            if(matchSpot.isMine) {
-              showToast("본인이 예매한 내역입니다.");
-            }
+            if(matchSpot.isMine) { showToast("본인이 예매한 내역입니다."); }
           };
         } else {
-          // 비어있는 좌석
           seatBtn.className = "aspect-square rounded-md bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-zinc-500 hover:text-zinc-300 font-medium text-[10px] border border-zinc-700 transition-all flex items-center justify-center";
           seatBtn.innerHTML = `<span>${seatCode}</span>`;
           seatBtn.onclick = () => bookEmptySeat(directorName, seatCode);
         }
-
         grid.appendChild(seatBtn);
       }
     }
@@ -565,7 +562,6 @@
       currentProjectionIndex = 0;
     }
 
-    // 스크린룸 캐러셀 뷰 로직
     function playMovieOnScreen(spot) {
       document.getElementById('floating-booking-bar').classList.add('hidden');
       document.querySelectorAll('.empty-seat-selected').forEach(el => {
@@ -589,509 +585,194 @@
       updateProjectionView(spot);
     }
 
-    function updateProjectionView(spot) {
-      if(currentProjectionImages.length === 0) return;
-      
-      const imgSrc = currentProjectionImages[currentProjectionIndex];
-      document.getElementById('projection-bg-img').src = imgSrc;
-      document.getElementById('projection-movie-badge').textContent = `${spot.movie} (좌석 ${spot.seat})`;
-      document.getElementById('projection-title').textContent = spot.title;
-      document.getElementById('projection-desc').textContent = spot.desc || '등록된 설명이 없습니다.';
-
-      const indicatorsContainer = document.getElementById('projection-indicators');
-      indicatorsContainer.innerHTML = '';
-      if (currentProjectionImages.length > 1) {
-        for (let i = 0; i < currentProjectionImages.length; i++) {
-          const dot = document.createElement('div');
-          dot.className = `w-1.5 h-1.5 rounded-full ${i === currentProjectionIndex ? 'bg-white' : 'bg-white/30'}`;
-          indicatorsContainer.appendChild(dot);
-        }
-      }
-    }
-
-    function prevProjectionSlide(e) {
-      e.stopPropagation();
-      if (currentProjectionImages.length <= 1) return;
-      currentProjectionIndex = (currentProjectionIndex - 1 + currentProjectionImages.length) % currentProjectionImages.length;
-      
-      const currentSeatCode = document.getElementById('projection-movie-badge').textContent.match(/\(좌석 (\d+)\)/)[1];
-      const matchSpot = filmingLocations.find(loc => loc.director === selectedTheaterDirectorName && loc.seat === currentSeatCode);
-      if(matchSpot) updateProjectionView(matchSpot);
-    }
-
-    function nextProjectionSlide(e) {
-      e.stopPropagation();
-      if (currentProjectionImages.length <= 1) return;
-      currentProjectionIndex = (currentProjectionIndex + 1) % currentProjectionImages.length;
-      
-      const currentSeatCode = document.getElementById('projection-movie-badge').textContent.match(/\(좌석 (\d+)\)/)[1];
-      const matchSpot = filmingLocations.find(loc => loc.director === selectedTheaterDirectorName && loc.seat === currentSeatCode);
-      if(matchSpot) updateProjectionView(matchSpot);
-    }
-
-    // 빈 좌석 클릭 시 플로팅 버튼 노출 로직
-    function bookEmptySeat(directorName, seatCode) {
-      document.querySelectorAll('.empty-seat-selected').forEach(el => {
-        el.classList.remove('empty-seat-selected', 'ring-2', 'ring-indigo-400', 'bg-zinc-700');
-        el.classList.add('bg-zinc-800');
-      });
-
-      const currentSeatBtn = document.getElementById(`seat-btn-${seatCode}`);
-      if (currentSeatBtn) {
-        currentSeatBtn.classList.add('empty-seat-selected', 'ring-2', 'ring-indigo-400', 'bg-zinc-700');
-        currentSeatBtn.classList.remove('bg-zinc-800');
-      }
-
-      const floatingBar = document.getElementById('floating-booking-bar');
-      const floatingBtn = document.getElementById('floating-book-btn');
-      const floatingText = document.getElementById('floating-book-text');
-      
-      floatingText.textContent = `${seatCode}번 좌석 예매하기`;
-      floatingBar.classList.remove('hidden');
-
-      floatingBtn.onclick = () => {
-        floatingBar.classList.add('hidden');
-        openAddLocationPage();
-        document.getElementById('form-director').value = directorName;
-        document.getElementById('form-seat').value = seatCode;
-      };
-    }
-
-    // 메인 페이지 전환 로직 (컷발견 제거)
+    // --- 인앱 네비게이션 및 탭 스위칭 컨트롤러 ---
     function switchPage(pageId) {
-      if (pageId === 'add' || pageId === 'theater-booking') {
-        document.getElementById('app-bottom-nav').classList.add('hidden'); 
-      } else {
-        document.getElementById('app-bottom-nav').classList.remove('hidden'); 
-      }
-
-      if (pageId === 'add') {
-        document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden'));
-        document.getElementById('page-add-location').classList.remove('hidden');
-        return;
-      }
-
-      document.getElementById('page-add-location').classList.add('hidden');
       document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden'));
       document.getElementById(`page-${pageId}`).classList.remove('hidden');
-
-      const navTheater = document.getElementById('nav-theater');
-      const navSpectator = document.getElementById('nav-spectator');
-      const navMyCine = document.getElementById('nav-mycine');
-
-      navTheater.classList.add('text-gray-400'); navTheater.classList.remove('text-indigo-600');
-      navSpectator.classList.add('text-gray-400'); navSpectator.classList.remove('text-indigo-600');
-      navMyCine.classList.add('text-gray-400'); navMyCine.classList.remove('text-indigo-600');
-
-      if (pageId === 'theater') {
-        navTheater.classList.add('text-indigo-600');
-        navTheater.classList.remove('text-gray-400');
-      } else if (pageId === 'spectator') {
-        navSpectator.classList.add('text-indigo-600');
-        navSpectator.classList.remove('text-gray-400');
-        renderBookshelf();
-      } else if (pageId === 'mycine') {
-        navMyCine.classList.add('text-indigo-600');
-        navMyCine.classList.remove('text-gray-400');
-        renderMyCineArchive(); 
+      
+      // 하단바 상태 갱신
+      document.querySelectorAll('#app-bottom-nav button').forEach(btn => {
+        btn.classList.remove('text-indigo-600');
+        btn.classList.add('text-gray-400');
+      });
+      const activeNav = document.getElementById(`nav-${pageId}`);
+      if (activeNav) {
+        activeNav.classList.remove('text-gray-400');
+        activeNav.classList.add('text-indigo-600');
       }
     }
 
-    function switchTheaterTab(tabId) {
+    function switchTheaterTab(theaterId) {
       document.querySelectorAll('.theater-tab-btn').forEach(btn => {
         btn.classList.remove('border-indigo-600', 'text-indigo-600');
         btn.classList.add('border-transparent', 'text-gray-400');
       });
-
-      const activeBtn = document.getElementById(`tab-${tabId}`);
-      if (activeBtn) {
-        activeBtn.classList.remove('border-transparent', 'text-gray-400');
-        activeBtn.classList.add('border-indigo-600', 'text-indigo-600');
-      }
-
       document.querySelectorAll('.theater-tab-content').forEach(c => c.classList.add('hidden'));
-      const activeContent = document.getElementById(`content-${tabId}`);
-      if (activeContent) {
-        activeContent.classList.remove('hidden');
+      
+      document.getElementById(`tab-${theaterId}`).classList.add('border-indigo-600', 'text-indigo-600');
+      document.getElementById(`tab-${theaterId}`).classList.remove('border-transparent', 'text-gray-400');
+      document.getElementById(`content-${theaterId}`).classList.remove('hidden');
+
+      // 서울아트시네마 전용 동적 크롤링 핸들러 가동
+      if (theaterId === 'seoul') {
+        fetchSeoulArtCinemaTimetable();
       }
     }
 
-    function openAddDirectorModal() {
-      document.getElementById('add-director-modal').classList.remove('hidden');
-      document.getElementById('form-dir-name').value = '';
-      document.getElementById('form-dir-emoji').value = '👤';
-      lucide.createIcons();
-    }
-
-    function closeAddDirectorModal() { document.getElementById('add-director-modal').classList.add('hidden'); }
-
-    function handleNewDirectorSubmit(e) {
-      e.preventDefault();
-      const name = document.getElementById('form-dir-name').value.trim();
-      let emoji = document.getElementById('form-dir-emoji').value.trim();
-      if (!emoji) emoji = '👤';
-
-      if (directorsList.some(d => d.name.toLowerCase() === name.toLowerCase())) {
-        showToast("이미 등록되어 있는 감독입니다.");
+    // --- 서울아트시네마 HTML 스크래핑 및 동적 데이터 가공 엔진 ---
+    function fetchSeoulArtCinemaTimetable() {
+      const container = document.getElementById('seoul-calendar-container');
+      const loader = document.getElementById('seoul-loading');
+      
+      // 이미 로딩이 완료된 경우 재생성 차단
+      if (container.children.length > 0) {
+        loader.classList.add('hidden');
         return;
       }
 
-      const newDir = {
-        id: `dir-${Date.now()}`,
-        name: name,
-        shortName: name.length > 5 ? name.substring(0, 4) + '..' : name,
-        emoji: emoji
-      };
+      loader.classList.remove('hidden');
 
-      directorsList.push(newDir);
-      saveDirectorsToStorage();
-      renderBookshelf();
-      closeAddDirectorModal();
-      showToast(`'${name}' 감독이 추가되었습니다!`);
-    }
-
-    function handleDirectorAutoSuggest(value) {
-      const dropdown = document.getElementById('dir-suggest-dropdown');
-      const inputVal = value.trim().toLowerCase();
-
-      if (!inputVal) {
-        dropdown.innerHTML = '';
-        dropdown.classList.add('hidden');
-        return;
-      }
-
-      const matches = directorsList.filter(d => d.name.toLowerCase().includes(inputVal));
-
-      if (matches.length === 0) {
-        dropdown.innerHTML = '';
-        dropdown.classList.add('hidden');
-        return;
-      }
-
-      dropdown.innerHTML = '';
-      matches.forEach(dir => {
-        const item = document.createElement('button');
-        item.type = 'button';
-        item.className = "w-full text-left px-4 py-2.5 text-xs text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors font-semibold flex items-center gap-1.5 border-b border-zinc-50 last:border-0";
-        item.onclick = () => {
-          document.getElementById('form-director').value = dir.name;
-          dropdown.innerHTML = '';
-          dropdown.classList.add('hidden');
-        };
-        item.innerHTML = `<span>${dir.emoji || '👤'}</span> ${dir.name}`;
-        dropdown.appendChild(item);
-      });
-      dropdown.classList.remove('hidden');
-    }
-
-    function handleMyCineSearch(val) { renderMyCineArchive(val.trim()); }
-
-    // 마이CINE 티켓형 디자인 렌더링
-    function renderMyCineArchive(filterQuery = '') {
-      const container = document.getElementById('mycine-list-container');
-      const countLabel = document.getElementById('mycine-count');
-      if (!container) return;
-
-      const listData = filmingLocations.filter(loc => {
-        if (!filterQuery) return true;
-        return loc.movie.toLowerCase().includes(filterQuery.toLowerCase());
-      });
-
-      countLabel.textContent = `총 ${listData.length}개`;
-
-      if (listData.length === 0) {
-        container.innerHTML = `
-          <div class="h-60 flex flex-col items-center justify-center text-center text-gray-400 gap-2">
-            <i data-lucide="ticket" class="w-8 h-8 text-gray-300"></i>
-            <p class="text-xs font-bold">발권된 티켓 내역이 없습니다</p>
-          </div>
-        `;
-        lucide.createIcons();
-        return;
-      }
-
-      container.innerHTML = '';
-      listData.forEach(loc => {
-        const thumbnail = loc.stillCuts?.[0] || 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=400&auto=format&fit=crop';
-        const card = document.createElement('div');
-        
-        // 티켓 모양의 CSS 구조 적용
-        card.className = "bg-white rounded-xl shadow-sm overflow-hidden flex relative border border-zinc-200 cursor-pointer hover:shadow-md transition-all active:scale-[0.99] mb-4 h-28";
-        card.onclick = () => openMyCineDetailPage(loc);
-        
-        card.innerHTML = `
-          <div class="w-24 shrink-0 bg-zinc-900 relative border-r-2 border-dashed border-zinc-200">
-            <img src="${thumbnail}" class="w-full h-full object-cover opacity-90" />
-          </div>
+      // CORS 우회를 위해 AllOrigins 공공 오픈 프록시 파이프라인 활용
+      const targetUrl = 'https://www.cinematheque.seoul.kr/bbs/content.php?co_id=timetable';
+      fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`)
+        .then(response => {
+          if (response.ok) return response.json();
+          throw new Error('Network response was not ok.');
+        })
+        .then(data => {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(data.contents, 'text/html');
+          const originalTable = doc.querySelector('#ctt_con table');
           
-          <div class="absolute left-24 top-0 -mt-2 -ml-2 w-4 h-4 bg-zinc-50 rounded-full border border-zinc-200 z-10"></div>
-          <div class="absolute left-24 bottom-0 -mb-2 -ml-2 w-4 h-4 bg-zinc-50 rounded-full border border-zinc-200 z-10"></div>
-          
-          <div class="flex-1 p-3 py-2 flex flex-col justify-center bg-amber-50/10">
-             <div class="flex items-center gap-1.5 mb-1">
-                <span class="text-[9px] bg-indigo-50 text-indigo-600 font-extrabold px-1.5 py-0.5 rounded-sm uppercase border border-indigo-100">${loc.movie}</span>
-                <span class="text-[9px] text-zinc-500 font-bold px-1.5 py-0.5 border border-zinc-200 rounded-sm bg-white">${loc.director || '미지정'}</span>
-             </div>
-             <h4 class="text-sm font-black text-gray-900 truncate">${loc.title}</h4>
-             <div class="mt-auto flex items-center justify-between border-t border-zinc-200 pt-1.5">
-                <span class="text-[10px] text-zinc-400 font-mono tracking-widest">${loc.seat ? `SEAT ${loc.seat}` : 'NO SEAT'}</span>
-                <i data-lucide="ticket" class="w-3.5 h-3.5 text-zinc-400"></i>
-             </div>
-          </div>
-        `;
-        container.appendChild(card);
-      });
-      lucide.createIcons();
-    }
+          if (!originalTable) {
+            container.innerHTML = `<div class="p-4 text-center text-xs text-rose-500">시간표 데이터를 찾을 수 없습니다. 공식 홈페이지를 확인해 주세요.</div>`;
+            loader.classList.add('hidden');
+            return;
+          }
 
-    function openMyCineDetailPage(loc) {
-      switchPage('mycine-detail');
-      document.getElementById('mydetail-movie').textContent = loc.movie;
-      document.getElementById('mydetail-director').textContent = `감독: ${loc.director || "미지정"}`;
-      document.getElementById('mydetail-title').textContent = loc.title;
-      document.getElementById('mydetail-desc').textContent = loc.desc || '설명 없음';
+          const rows = Array.from(originalTable.querySelectorAll('tr'));
+          const calendarData = [];
+          const dayMap = { 'Mon': '월', 'Tue': '화', 'Wed': '수', 'Thu': '목', 'Fri': '금', 'Sat': '토', 'Sun': '일' };
 
-      const deletePageBtn = document.getElementById('btn-delete-spot-page');
-      deletePageBtn.onclick = () => {
-        showCustomConfirm("기록 삭제", `'${loc.title}' 기록을 영구 삭제하시겠습니까?`, () => {
-            filmingLocations = filmingLocations.filter(item => item.id !== loc.id);
-            saveLocationsToStorage();
-            switchPage('mycine');
-            showToast("삭제가 완료되었습니다.");
-          });
-      };
+          // 1행(날짜) - 2행(영화 링크 묶음) 2중 행 구조 전수 조사
+          for (let i = 0; i < rows.length; i += 2) {
+            const dateRow = rows[i];
+            const movieRow = rows[i + 1];
+            if (!dateRow || !movieRow) break;
 
-      const editBtn = document.getElementById('btn-edit-spot-page');
-      editBtn.onclick = () => openEditLocationPage(loc);
+            const dateCells = dateRow.querySelectorAll('th, td');
+            const movieCells = movieRow.querySelectorAll('th, td');
 
-      const stillGallery = document.getElementById('mydetail-still-gallery');
-      stillGallery.innerHTML = '';
-      if (loc.stillCuts && loc.stillCuts.length > 0) {
-        loc.stillCuts.forEach(img => {
-          const div = document.createElement('div');
-          div.className = "flex-shrink-0 w-40 h-28 rounded-2xl overflow-hidden border snap-center";
-          div.innerHTML = `<img src="${img}" class="w-full h-full object-cover cursor-zoom-in" onclick="viewFullImage('${img}')" />`;
-          stillGallery.appendChild(div);
+            // 월요일부터 일요일까지 7개 열 간격 그대로 전개
+            for (let col = 0; col < 7; col++) {
+              if (!dateCells[col] || !movieCells[col]) continue;
+
+              let dateText = dateCells[col].innerText.trim();
+              Object.keys(dayMap).forEach(eng => {
+                if (dateText.includes(eng)) {
+                  dateText = dateText.replace(eng, dayMap[eng]).replace(/\s+/g, ' ');
+                }
+              });
+
+              const movieLinks = Array.from(movieCells[col].querySelectorAll('a'));
+              const movies = movieLinks.map(aTag => {
+                const text = aTag.innerText.trim();
+                const timeMatch = text.match(/\d{2}:\d{2}/);
+                const time = timeMatch ? timeMatch[0] : "시간미정";
+                const runtimeMatch = text.match(/\(([^)]+)\)/);
+                const runtime = runtimeMatch ? runtimeMatch[1] : "정보없음";
+                let title = text.replace(time, '').replace(/\([^)]+\)/, '').trim();
+
+                return { time, title, runtime, link: aTag.href };
+              }).filter(m => m.title !== "");
+
+              calendarData.push({ date: dateText, movies });
+            }
+          }
+
+          renderSeoulCalendar(calendarData);
+        })
+        .catch(err => {
+          console.error(err);
+          container.innerHTML = `<div class="p-4 text-center text-xs text-rose-500">시간표 로딩에 실패했습니다. (네트워크 연결 확인 필요)</div>`;
+        })
+        .finally(() => {
+          loader.classList.add('hidden');
         });
-      } else {
-        stillGallery.innerHTML = `<p class="text-xs text-zinc-400 p-2">업로드 이미지 없음</p>`;
-      }
-
-      const realGallery = document.getElementById('mydetail-real-gallery');
-      realGallery.innerHTML = '';
-      if (loc.realPhotos && loc.realPhotos.length > 0) {
-        loc.realPhotos.forEach(img => {
-          const div = document.createElement('div');
-          div.className = "flex-shrink-0 w-40 h-28 rounded-2xl overflow-hidden border snap-center";
-          div.innerHTML = `<img src="${img}" class="w-full h-full object-cover cursor-zoom-in" onclick="viewFullImage('${img}')" />`;
-          realGallery.appendChild(div);
-        });
-      } else {
-        realGallery.innerHTML = `<p class="text-xs text-zinc-400 p-2">업로드 이미지 없음</p>`;
-      }
-      setTimeout(() => lucide.createIcons(), 50);
     }
 
-    function openEditLocationPage(loc) {
-      switchPage('add'); 
-      document.getElementById('form-page-header-title').innerHTML = `
-        <i data-lucide="edit" class="w-5 h-5 text-indigo-600"></i> 기록 수정하기
-      `;
-      document.getElementById('form-edit-id').value = loc.id;
-      document.getElementById('form-movie').value = loc.movie;
-      document.getElementById('form-director').value = loc.director || "";
-      document.getElementById('form-title').value = loc.title;
-      document.getElementById('form-desc').value = loc.desc;
-      document.getElementById('form-seat').value = loc.seat || "";
-
-      currentStillCutsBase64 = [...(loc.stillCuts || [])];
-      currentRealPhotosBase64 = [...(loc.realPhotos || [])];
-
-      renderBase64Previews('preview-still-container', currentStillCutsBase64, true);
-      renderBase64Previews('preview-real-container', currentRealPhotosBase64, false);
-      setTimeout(() => lucide.createIcons(), 50);
-    }
-
-    function renderBase64Previews(containerId, dataArray, isStill) {
-      const container = document.getElementById(containerId);
+    // 완전히 동일한 반응형 너비를 적용한 7열 모바일 그리드 캘린더 드로잉
+    function renderSeoulCalendar(data) {
+      const container = document.getElementById('seoul-calendar-container');
       container.innerHTML = '';
-      dataArray.forEach(base64Data => {
-        const card = document.createElement('div');
-        card.className = "relative rounded-xl overflow-hidden flex-shrink-0 w-20 h-20 border shadow-sm";
-        card.innerHTML = `
-          <img class="w-full h-full object-cover" src="${base64Data}">
-          <button type="button" onclick="this.parentElement.remove(); removeBase64('${base64Data}', ${isStill})" class="absolute top-1 right-1 bg-black/60 hover:bg-black/80 text-white rounded-full p-0.5 transition-colors">
-            <i data-lucide="x" class="w-3.5 h-3.5"></i>
-          </button>
+
+      // 상단 월화수목금토일 1행 헤더는 기획 지시대로 제거함
+
+      // 반응형 격자 래퍼 빌딩 (너비 자동 계산 1fr)
+      const grid = document.createElement('div');
+      grid.className = "w-full grid grid-cols-7 border-t border-l border-zinc-200 bg-white text-zinc-900";
+
+      data.forEach(dayData => {
+        let dateColor = 'text-zinc-800';
+        if (dayData.date.includes('토')) dateColor = 'text-blue-600';
+        if (dayData.date.includes('일')) dateColor = 'text-red-600';
+
+        let dayCell = `
+          <div class="box-border min-h-[140px] border-r border-b border-zinc-200 flex flex-col overflow-hidden">
+            <div class="bg-zinc-100 px-1 py-1.5 text-[10px] font-black text-center border-b border-zinc-200 ${dateColor}">
+              ${dayData.date}
+            </div>
+            <div class="p-1 flex flex-col gap-1 flex-1 bg-white">
         `;
-        container.appendChild(card);
-      });
-    }
 
-    function openAddLocationPage() {
-      switchPage('add'); 
-      document.getElementById('form-page-header-title').innerHTML = `
-        <i data-lucide="clapperboard" class="w-5 h-5 text-indigo-600"></i> 나만의 기록 추가
-      `;
-      currentStillCutsBase64 = [];
-      currentRealPhotosBase64 = [];
-      document.getElementById('preview-still-container').innerHTML = '';
-      document.getElementById('preview-real-container').innerHTML = '';
-      document.getElementById('add-location-form').reset();
-      document.getElementById('form-edit-id').value = ""; 
-      document.getElementById('form-seat').value = ""; 
-      setTimeout(() => lucide.createIcons(), 50);
-    }
-
-    function closeAddLocationPage() {
-      const editId = document.getElementById('form-edit-id').value;
-      const seatCode = document.getElementById('form-seat').value;
-
-      if (editId) { switchPage('mycine'); } 
-      else if (seatCode) { switchPage('theater-booking'); } 
-      else { switchPage('spectator'); }
-    }
-
-    function previewMultipleImages(input, containerId) {
-      const container = document.getElementById(containerId);
-      const files = Array.from(input.files);
-      const isStill = containerId.includes('still');
-
-      files.forEach(file => {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          const base64Data = e.target.result;
-          if (isStill) currentStillCutsBase64.push(base64Data);
-          else currentRealPhotosBase64.push(base64Data);
-
-          const card = document.createElement('div');
-          card.className = "relative rounded-xl overflow-hidden flex-shrink-0 w-20 h-20 border shadow-sm bg-zinc-900";
-          card.innerHTML = `
-            <img class="w-full h-full object-cover" src="${base64Data}">
-            <button type="button" onclick="this.parentElement.remove(); removeBase64('${base64Data}', ${isStill})" class="absolute top-1 right-1 bg-black/60 hover:bg-black/80 text-white rounded-full p-0.5 transition-colors">
-              <i data-lucide="x" class="w-3.5 h-3.5"></i>
-            </button>
+        dayData.movies.forEach(m => {
+          // 예외 문구 포함 모든 영화 항목을 균등한 배경의 카드 구조로 변환
+          dayCell += `
+            <div onclick='openMovieInfoModal(${JSON.stringify(m).replace(/'/g, "&#39;")})'
+                 class="box-border text-[9px] p-1.5 bg-zinc-50 border border-zinc-200 rounded-md border-l-[3px] border-l-indigo-600 cursor-pointer active:bg-indigo-50 active:border-indigo-300 transition-colors leading-tight break-all">
+              <strong class="text-indigo-600 font-bold block mb-0.5">${m.time}</strong>
+              <span class="text-zinc-800 font-medium">${m.title}</span>
+            </div>
           `;
-          container.appendChild(card);
-          lucide.createIcons();
-        };
-        reader.readAsDataURL(file);
+        });
+
+        dayCell += `</div></div>`;
+        grid.innerHTML += dayCell;
       });
+
+      container.appendChild(grid);
     }
 
-    function removeBase64(data, isStill) {
-      if (isStill) currentStillCutsBase64 = currentStillCutsBase64.filter(item => item !== data);
-      else currentRealPhotosBase64 = currentRealPhotosBase64.filter(item => item !== data);
+    // --- 인앱 전용 정보 모달 인터랙션 인터페이스 ---
+    function openMovieInfoModal(movie) {
+      document.getElementById('modal-title').innerText = movie.title;
+      document.getElementById('modal-time').innerText = movie.time;
+      document.getElementById('modal-runtime').innerText = movie.runtime;
+      document.getElementById('modal-book-btn').href = movie.link;
+      document.getElementById('movie-info-modal').classList.remove('hidden');
     }
 
-    function triggerFormSubmit() {
-      const form = document.getElementById('add-location-form');
-      if (form.reportValidity()) {
-        form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
-      }
+    function closeMovieInfoModal() {
+      document.getElementById('movie-info-modal').classList.add('hidden');
     }
 
-    function handleNewLocationSubmit(e) {
-      e.preventDefault();
-
-      const editId = document.getElementById('form-edit-id').value;
-      const seatCode = document.getElementById('form-seat').value;
-
-      const movie = document.getElementById('form-movie').value.trim();
-      const director = document.getElementById('form-director').value.trim();
-      
-      const title = document.getElementById('form-title').value.trim() || `${movie} 명장면`;
-      const desc = document.getElementById('form-desc').value.trim() || '상세 소개 없음';
-
-      let stillCuts = [...currentStillCutsBase64];
-      let realPhotos = [...currentRealPhotosBase64];
-
-      if (stillCuts.length === 0) stillCuts.push("https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=600&auto=format&fit=crop");
-      if (realPhotos.length === 0) realPhotos.push("https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?q=80&w=600&auto=format&fit=crop");
-
-      if (editId) {
-        const targetIdx = filmingLocations.findIndex(loc => loc.id === editId);
-        if (targetIdx !== -1) {
-          filmingLocations[targetIdx] = {
-            ...filmingLocations[targetIdx],
-            movie, director, title, desc,
-            stillCuts, realPhotos
-          };
-          showToast("아카이브가 성공적으로 수정되었습니다.");
-          switchPage('mycine');
-        }
-      } else {
-        const newLoc = {
-          id: `loc-custom-${Date.now()}`,
-          movie, director, title, desc,
-          stillCuts, realPhotos,
-          seat: seatCode || null,
-          isMine: true // 본인 생성 콘텐츠 표식 추가
-        };
-        filmingLocations.unshift(newLoc);
-        showToast("저장 완료되었습니다!");
-      }
-
-      if (director && !directorsList.some(d => d.name.toLowerCase() === director.toLowerCase())) {
-        const autoDir = {
-          id: `dir-${Date.now()}`,
-          name: director,
-          shortName: director.length > 5 ? director.substring(0, 4) + '..' : director,
-          emoji: '👤'
-        };
-        directorsList.push(autoDir);
-        saveDirectorsToStorage();
-      }
-
-      saveLocationsToStorage();
-      
-      document.getElementById('add-location-form').reset();
-      currentStillCutsBase64 = []; currentRealPhotosBase64 = [];
-      document.getElementById('preview-still-container').innerHTML = '';
-      document.getElementById('preview-real-container').innerHTML = '';
-
-      // 등록 성공 시 바로 시네마 스크린 매칭룸으로 돌아가고, 생성된 좌석을 강제 클릭해 화면에 띄웁니다.
-      if (!editId) {
-        if (seatCode) {
-          switchPage('theater-booking');
-          loadTheaterDirectorSeats(director);
-          setTimeout(() => {
-            const seatBtn = document.getElementById(`seat-btn-${seatCode}`);
-            if (seatBtn) seatBtn.click();
-          }, 100);
-        } else {
-          switchPage('spectator');
-        }
-      }
-    }
-
-    function showToast(message) {
-      const toast = document.getElementById('toast');
-      const toastMsg = document.getElementById('toast-message');
-      toastMsg.innerText = message;
-      toast.classList.remove('opacity-0', 'translate-y-3', 'pointer-events-none');
-      toast.classList.add('opacity-100', 'translate-y-0');
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      document.getElementById('toast-message').innerText = msg;
+      t.style.opacity = "1";
+      t.style.transform = "translate(-50%, 0)";
       setTimeout(() => {
-        toast.classList.add('opacity-0', 'translate-y-3', 'pointer-events-none');
-        toast.classList.remove('opacity-100', 'translate-y-0');
-      }, 3000);
+        t.style.opacity = "0";
+        t.style.transform = "translate(-50%, 12px)";
+      }, 2000);
     }
 
-    function viewFullImage(src) {
-      const viewer = document.createElement('div');
-      viewer.className = "fixed inset-0 bg-black/95 z-[200] flex items-center justify-center p-4 cursor-zoom-out";
-      viewer.innerHTML = `<img src="${src}" class="max-w-full max-h-full object-contain rounded-lg shadow-2xl">`;
-      viewer.onclick = () => viewer.remove();
-      document.body.appendChild(viewer);
-    }
-
-    window.onload = function() {
+    window.addEventListener('DOMContentLoaded', () => {
       loadDirectorsFromStorage();
       loadLocationsFromStorage();
+      renderBookshelf();
       lucide.createIcons();
-      switchTheaterTab('ku');
-      switchPage('theater');
-    }
+    });
   </script>
 </body>
 </html>
